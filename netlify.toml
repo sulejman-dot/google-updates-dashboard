@@ -1,0 +1,6 @@
+[build]
+  # We don't need a build command because this is pure HTML/CSS/JS
+  command = "echo 'No build command required'"
+  
+  # Tell Netlify to serve the 'dashboard' folder
+  publish = "dashboard"
