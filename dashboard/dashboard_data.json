@@ -1,0 +1,46 @@
+[
+  {
+    "id": "1",
+    "date": "2026-03-27T08:00:00.000000",
+    "title": "SEOmonitor Case Study Results",
+    "status": "Brand Mention",
+    "severity": "Positive \ud83d\ude0a",
+    "url": "https://reddit.com/r/SEO",
+    "text": "We just migrated our tracking stack. SEOmonitor is fantastic. Highly recommend it to anyone looking for accurate search volume. Love the forecasting tool.",
+    "source": "Reddit (r/SEO)",
+    "is_new": true
+  },
+  {
+    "id": "2",
+    "date": "2026-03-26T12:00:00.000000",
+    "title": "Rankings dropped massively today",
+    "status": "UGC Discussion",
+    "severity": "Info/Unconfirmed",
+    "url": "https://news.ycombinator.com/item?id=123",
+    "text": "Anyone seeing huge volatility today on the Google search algorithm? Our SaaS product traffic plummeted overnight.",
+    "source": "Hacker News",
+    "is_new": true
+  },
+  {
+    "id": "3",
+    "date": "2026-03-25T10:00:00.000000",
+    "title": "Google rolling out local pack changes?",
+    "status": "SERP Feature Change",
+    "severity": "Info/Unconfirmed",
+    "url": "https://reddit.com/r/TechSEO",
+    "text": "The local pack format changed today, and SGE AI Overviews are pushing down all standard rich results. Anyone else tracking this?",
+    "source": "Reddit (r/TechSEO)",
+    "is_new": true
+  },
+  {
+    "id": "4",
+    "date": "2026-03-24T05:00:00.000000",
+    "title": "March Core Update Finished",
+    "status": "AVAILABLE",
+    "severity": "Info",
+    "url": "https://status.search.google.com",
+    "text": "The rollout of the ranking update is now complete.",
+    "source": "Google Status Dashboard",
+    "is_new": false
+  }
+]

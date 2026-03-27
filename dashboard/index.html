@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Updates & Sentiment Dashboard</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <meta name="description" content="A real-time dashboard for monitoring Google Search updates, SEO community discussions, and SEOmonitor brand mentions.">
+</head>
+<body>
+    <div class="background-globes">
+        <div class="globe globe-purple"></div>
+        <div class="globe globe-blue"></div>
+        <div class="globe globe-orange"></div>
+    </div>
+
+    <main class="dashboard-container">
+        <header class="dashboard-header">
+            <div>
+                <h1>Pulse <span>Monitor</span></h1>
+                <p>Real-time Google Algorithm & Brand Sentiment Intelligence</p>
+            </div>
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <span class="stat-label">Total Alerts</span>
+                    <span class="stat-value" id="stat-total">0</span>
+                </div>
+                <div class="stat-card highlight">
+                    <span class="stat-label">Brand Mentions</span>
+                    <span class="stat-value" id="stat-mentions">0</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="filters" aria-label="Alert Filters">
+            <button class="filter-btn active" data-filter="all">All Signals</button>
+            <button class="filter-btn" data-filter="Brand Mention">Brand Mentions</button>
+            <button class="filter-btn" data-filter="UGC Discussion">Algo Chatter</button>
+            <button class="filter-btn" data-filter="SERP Feature Change">SERP Features</button>
+            <button class="filter-btn" data-filter="official">Official Updates</button>
+        </section>
+
+        <section class="alerts-grid" id="alertsGrid" aria-live="polite">
+            <!-- Alert Cards rendered dynamically via JS -->
+            <!-- Placeholder loader -->
+            <div class="loading">Loading Intelligence Data...</div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
