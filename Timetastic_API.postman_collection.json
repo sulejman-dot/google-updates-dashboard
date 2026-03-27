@@ -1,0 +1,134 @@
+{
+    "info": {
+        "_postman_id": "8b9e6e3c-7c5a-4b7d-8f9a-1c2d3e4f5a6b",
+        "name": "Timetastic API",
+        "description": "Collection for testing Timetastic API endpoints. Ensure you set the `apiToken` variable in the collection variables or environment.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Users",
+            "item": [
+                {
+                    "name": "Get All Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{apiToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Holidays",
+            "item": [
+                {
+                    "name": "Get All Holidays",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{apiToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/holidays",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "holidays"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Leaves",
+            "item": [
+                {
+                    "name": "Get All Leaves",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{apiToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/leaves",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "leaves"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Departments",
+            "item": [
+                {
+                    "name": "Get Departments",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{apiToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/departments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "departments"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "https://app.timetastic.co.uk/api",
+            "type": "string"
+        },
+        {
+            "key": "apiToken",
+            "value": "05e639d8-4f09-4b5a-ad2b-1bf39d2bae4f",
+            "type": "string"
+        }
+    ]
+}

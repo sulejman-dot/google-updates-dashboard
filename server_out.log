@@ -1,0 +1,28 @@
+/Users/user/Library/Python/3.9/lib/python/site-packages/google/auth/__init__.py:54: FutureWarning: You are using a Python version 3.9 past its end of life. Google will update google-auth with critical bug fixes on a best-effort basis, but not with any other fixes or features. Please upgrade your Python version, and then update google-auth.
+  warnings.warn(eol_message.format("3.9"), FutureWarning)
+/Users/user/Library/Python/3.9/lib/python/site-packages/google/oauth2/__init__.py:40: FutureWarning: You are using a Python version 3.9 past its end of life. Google will update google-auth with critical bug fixes on a best-effort basis, but not with any other fixes or features. Please upgrade your Python version, and then update google-auth.
+  warnings.warn(eol_message.format("3.9"), FutureWarning)
+/Users/user/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+🚀 Server starting on http://localhost:3000
+ * Serving Flask app 'slack_bot_server'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:3000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [13/Feb/2026 17:05:44] "[33mGET /health HTTP/1.1[0m" 404 -
+127.0.0.1 - - [13/Feb/2026 17:05:45] "[33mGET /health HTTP/1.1[0m" 404 -
+[2026-02-13T17:06:03.487629] 📩 Received command: /analyze https://www.seomonitor.com/blog/seo-strategy-template from test (user_id=U123, channel_id=C123)
+[2026-02-13T17:06:03.487969] ⚙️ Starting background process_command
+127.0.0.1 - - [13/Feb/2026 17:06:03] "POST /slack/command HTTP/1.1" 200 -
+[2026-02-13T17:26:40.548500] 📩 Received command: /clickup-comments  from sulejman (user_id=U07FDMFS52M, channel_id=C0AESD9DTC5)
+[2026-02-13T17:26:40.549336] ⚙️ Starting background process_command127.0.0.1 - - [13/Feb/2026 17:26:40] "POST /slack/command HTTP/1.1" 200 -
+
+❌ Error checking comments: 'name'
+Traceback (most recent call last):
+  File "/Users/user/Library/CloudStorage/GoogleDrive-sulejman@seomonitor.com/My Drive/cosmin folder/Sulejman Workspace/slack_bot_server.py", line 1673, in process_command
+    todays_comments = get_todays_comments(cache)
+  File "/Users/user/Library/CloudStorage/GoogleDrive-sulejman@seomonitor.com/My Drive/cosmin folder/Sulejman Workspace/clickup_comments_cache_manager.py", line 108, in get_todays_comments
+    "name": task_data["name"],
+KeyError: 'name'
+

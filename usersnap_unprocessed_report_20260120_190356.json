@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-01-20T19:03:56.271180",
+  "filter_applied": "Not state: Done",
+  "total_checked": 1,
+  "incomplete_count": 0,
+  "all_items": [
+    {
+      "id": "#3983",
+      "missing": [],
+      "details": {
+        "assignee": "\u2753 Unknown",
+        "priority": "\u2753 Unknown",
+        "status": "\u2753 Unknown"
+      },
+      "url": "https://app.usersnap.com/#/projects/31a2ba9a-4a79-42c7-9218-c8782d4a1435/list?number=3983&text=Not%2520state%253A%2520Done&url=Not%2520state%253A%2520Done"
+    }
+  ],
+  "incomplete_items": []
+}

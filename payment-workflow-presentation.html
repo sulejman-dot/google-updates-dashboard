@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Workflow Automation - 5 Min Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .slide { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px; color: white; }
+        .slide-content { background: rgba(255,255,255,0.95); color: #333; padding: 50px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 1000px; width: 100%; }
+        h1 { font-size: 3.5em; margin-bottom: 20px; color: #667eea; text-align: center; }
+        h2 { font-size: 2.5em; margin-bottom: 30px; color: #764ba2; border-bottom: 3px solid #667eea; padding-bottom: 15px; }
+        h3 { font-size: 1.8em; margin: 25px 0 15px; color: #667eea; }
+        ul { list-style: none; padding-left: 0; }
+        li { margin: 15px 0; padding-left: 30px; position: relative; font-size: 1.2em; line-height: 1.6; }
+        li:before { content: "✓"; position: absolute; left: 0; color: #667eea; font-weight: bold; font-size: 1.3em; }
+        .highlight { background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%); padding: 30px; border-radius: 15px; margin: 25px 0; }
+        .metric { display: inline-block; background: #667eea; color: white; padding: 15px 30px; border-radius: 10px; margin: 10px; font-size: 1.5em; font-weight: bold; }
+        .screenshot { width: 100%; max-width: 800px; margin: 20px auto; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: block; }
+        .email-draft { background: #f8f9fa; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 5px; font-family: monospace; }
+        .nav { position: fixed; bottom: 30px; right: 30px; }
+        .nav button { background: #667eea; color: white; border: none; padding: 15px 30px; margin: 0 5px; border-radius: 50px; cursor: pointer; font-size: 1.1em; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .nav button:hover { background: #764ba2; transform: translateY(-2px); }
+        .slide-number { position: fixed; top: 30px; right: 30px; background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 20px; font-weight: bold; color: #667eea; }
+    </style>
+</head>
+<body>
+    <div class="slide-number" id="slideNum">1 / 6</div>
+    
+    <!-- Slide 1: Title -->
+    <div class="slide" id="slide1" style="display: flex;">
+        <div class="slide-content" style="text-align: center;">
+            <h1>🚀 Payment Chase Automation</h1>
+            <p style="font-size: 1.8em; margin: 30px 0; color: #666;">Transforming Support Efficiency at SEOmonitor</p>
+            <div style="margin-top: 50px;">
+                <div class="metric">24 Clients</div>
+                <div class="metric">3 Minutes</div>
+                <div class="metric">100% Automated</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: The Challenge -->
+    <div class="slide" id="slide2" style="display: none;">
+        <div class="slide-content">
+            <h2>The Challenge</h2>
+            <h3>Before Automation:</h3>
+            <ul>
+                <li>Manual scanning of Chargebee for 24+ unpaid invoices</li>
+                <li>Copy-pasting client data into Google Sheets</li>
+                <li>Writing individual chase emails from scratch</li>
+                <li>Remembering who to follow up with and when</li>
+                <li>No systematic approach for responsive vs. non-responsive clients</li>
+            </ul>
+            <div class="highlight">
+                <h3 style="color: #333;">⏱️ Time Cost: 2-3 hours per week</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: The Solution -->
+    <div class="slide" id="slide3" style="display: none;">
+        <div class="slide-content">
+            <h2>The Solution: End-to-End Pipeline</h2>
+            <h3>Step 1: Auto-Scan Chargebee</h3>
+            <img src="file:///Users/sulejman/.gemini/antigravity/brain/fd3309b8-ac67-4117-bffd-5d17131a6c9c/chargebee_invoices_view_1767969893713.png" class="screenshot" alt="Chargebee Scan">
+            <ul style="margin-top: 20px;">
+                <li>Extracts all 24 unpaid invoices in seconds</li>
+                <li>Captures: Client, Amount, Date, Failure Reason</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Slide 4: Sheet Update -->
+    <div class="slide" id="slide4" style="display: none;">
+        <div class="slide-content">
+            <h2>Step 2: Smart Sheet Sync</h2>
+            <img src="file:///Users/sulejman/.gemini/antigravity/brain/fd3309b8-ac67-4117-bffd-5d17131a6c9c/monthly_unpaid_tab_1767970291513.png" class="screenshot" alt="Sheet Update">
+            <ul style="margin-top: 20px;">
+                <li>Identifies NEW clients (not yet in tracker)</li>
+                <li>Auto-assigns 50/50 between Sulejman & Katty</li>
+                <li>Updates "Monthly unpaid" tab automatically</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Slide 5: Email Automation -->
+    <div class="slide" id="slide5" style="display: none;">
+        <div class="slide-content">
+            <h2>Step 3: Intelligent Email Drafts</h2>
+            <h3>Example: Friendly Nudge (Technical)</h3>
+            <div class="email-draft">
+<strong>Subject:</strong> Quick check on Invoice #APPE-39078 for €169.00
+
+Hi John,
+
+We noticed a small hiccup with the latest invoice transaction of <strong>€169.00</strong> 
+(the error was "<strong>Insufficient Funds</strong>"). This usually just means 
+the bank needs a quick nod from you to let it through.
+
+Could you take a look when you have a moment?
+[Link to Portal]
+
+Thanks!
+            </div>
+            <ul style="margin-top: 20px;">
+                <li>5 template variations (Friendly, Firm, Broken Promise, etc.)</li>
+                <li>Smart scheduling: +1 to +3 days based on urgency</li>
+                <li>Chargebee retry check before sending</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Slide 6: Results -->
+    <div class="slide" id="slide6" style="display: none;">
+        <div class="slide-content">
+            <h2>The Impact</h2>
+            <div class="highlight">
+                <h3>⏱️ Time Savings:</h3>
+                <ul>
+                    <li><strong>Before:</strong> 2-3 hours/week</li>
+                    <li><strong>After:</strong> 5 minutes/week</li>
+                    <li><strong>Reduction:</strong> 95% time saved</li>
+                </ul>
+            </div>
+            <h3 style="margin-top: 30px;">Additional Benefits:</h3>
+            <ul>
+                <li>Zero data entry errors</li>
+                <li>Consistent professional tone</li>
+                <li>Never miss a follow-up</li>
+                <li>Equal workload distribution</li>
+                <li>Full audit trail in one place</li>
+            </ul>
+            <div style="text-align: center; margin-top: 40px;">
+                <h3 style="color: #667eea;">✨ From Manual Chaos to Automated Excellence</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <button onclick="prevSlide()">← Previous</button>
+        <button onclick="nextSlide()">Next →</button>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 6;
+
+        function showSlide(n) {
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById('slide' + i).style.display = 'none';
+            }
+            document.getElementById('slide' + n).style.display = 'flex';
+            document.getElementById('slideNum').textContent = n + ' / ' + totalSlides;
+            currentSlide = n;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+    </script>
+</body>
+</html>

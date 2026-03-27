@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetastic Filtering Logic - Visual Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin: 30px 0 15px 0;
+            font-size: 1.3em;
+        }
+        
+        .flow-diagram {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .flow-step {
+            background: white;
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .flow-step::before {
+            content: '↓';
+            display: block;
+            text-align: center;
+            font-size: 24px;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .flow-step:first-child::before {
+            display: none;
+        }
+        
+        .step-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .json-key {
+            color: #66d9ef;
+        }
+        
+        .json-string {
+            color: #a6e22e;
+        }
+        
+        .json-number {
+            color: #ae81ff;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin: 0 5px;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .example-box {
+            background: #f8f9fa;
+            border-left: 4px solid #764ba2;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .calculation {
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 2px solid #667eea;
+        }
+        
+        .edge-case {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .edge-case:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        .edge-case-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .checkmark {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .crossmark {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .formula-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .formula-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+        
+        .formula-code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            margin: 8px 0;
+        }
+        
+        .formula-description {
+            color: #666;
+            font-size: 0.95em;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 Timetastic Filtering Logic</h1>
+            <p class="subtitle">Visual Guide for Make Integration</p>
+        </header>
+        
+        <div class="content">
+            <!-- Data Flow -->
+            <h2>📊 Data Flow Diagram</h2>
+            <div class="flow-diagram">
+                <div class="flow-step" style="background: #e1f5ff;">
+                    <div class="step-label">Module 8</div>
+                    Read Active Users from Google Sheets
+                </div>
+                <div class="flow-step" style="background: #fff4e1;">
+                    <div class="step-label">Module 8A-1</div>
+                    Call Timetastic API - Get All Users
+                </div>
+                <div class="flow-step" style="background: #fff4e1;">
+                    <div class="step-label">Module 8A-2</div>
+                    Call Timetastic API - Get Absences
+                </div>
+                <div class="flow-step" style="background: #ffe1e1;">
+                    <div class="step-label">Module 8B-1</div>
+                    Map userId to Email
+                </div>
+                <div class="flow-step" style="background: #ffe1e1;">
+                    <div class="step-label">Module 8B-2</div>
+                    Filter Available Users
+                </div>
+                <div class="flow-step" style="background: #e1ffe1;">
+                    <div class="step-label">Module 11</div>
+                    Array Aggregator
+                </div>
+                <div class="flow-step" style="background: #f0e1ff;">
+                    <div class="step-label">Module 13</div>
+                    Calculate Response Rate
+                </div>
+            </div>
+            
+            <!-- Example Data Transformation -->
+            <h2>🔄 Example Data Transformation</h2>
+            
+            <h3>Input: Module 8 (Active Users from Google Sheets)</h3>
+            <div class="code-block">
+[
+  {"name": "Cosmin Negrescu", "email": "cosmin@seomonitor.com", "department": "Leadership"},
+  {"name": "Claudiu Stanciu", "email": "claudiu@seomonitor.com", "department": "Engineering"},
+  {"name": "Delia Dragan", "email": "delia@seomonitor.com", "department": "CS"},
+  {"name": "Diana Grigorescu", "email": "diana@seomonitor.com", "department": "Product"},
+  {"name": "Andrei Pantea", "email": "andrei.p@seomonitor.com", "department": "Engineering"}
+]
+            </div>
+            
+            <h3>Input: Module 8A-2 (Timetastic API Response)</h3>
+            <div class="code-block">
+[
+  {
+    "date": "2026-02-10",
+    "absences": [
+      {
+        "userId": 208777,
+        "userName": "Cosmin Negrescu",
+        "absenceType": "Booking",
+        "detail": "Holiday"
+      },
+      {
+        "userId": 778639,
+        "userName": "Claudiu Stanciu",
+        "absenceType": "Booking",
+        "detail": "Holiday"
+      },
+      {
+        "userId": 515385,
+        "userName": "Delia Dragan",
+        "absenceType": "Booking",
+        "detail": "Holiday"
+      }
+    ]
+  }
+]
+            </div>
+            
+            <h3>Processing: Map userId to Email</h3>
+            <div class="example-box">
+                <p><strong>Step 1:</strong> Get all users from Module 8A-1 (25 users with email mapping)</p>
+                <p><strong>Step 2:</strong> For each absence, lookup userId → email</p>
+                <div class="code-block" style="margin-top: 10px;">
+absent_emails = ["cosmin@seomonitor.com", "claudiu@seomonitor.com", "delia@seomonitor.com"]
+                </div>
+            </div>
+            
+            <h3>Processing: Filter Logic</h3>
+            <div class="example-box">
+                <p><strong>For each user in Module 8:</strong></p>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Cosmin: "cosmin@seomonitor.com" IN absent_emails → <span class="crossmark">EXCLUDE ✗</span></li>
+                    <li>Claudiu: "claudiu@seomonitor.com" IN absent_emails → <span class="crossmark">EXCLUDE ✗</span></li>
+                    <li>Delia: "delia@seomonitor.com" IN absent_emails → <span class="crossmark">EXCLUDE ✗</span></li>
+                    <li>Diana: "diana@seomonitor.com" NOT in absent_emails → <span class="checkmark">INCLUDE ✓</span></li>
+                    <li>Andrei: "andrei.p@seomonitor.com" NOT in absent_emails → <span class="checkmark">INCLUDE ✓</span></li>
+                </ul>
+            </div>
+            
+            <h3>Output: Module 8B-2 (Filtered Available Users)</h3>
+            <div class="code-block">
+[
+  {"name": "Diana Grigorescu", "email": "diana@seomonitor.com", "department": "Product"},
+  {"name": "Andrei Pantea", "email": "andrei.p@seomonitor.com", "department": "Engineering"}
+]
+            </div>
+            
+            <h3>Final Calculation</h3>
+            <div class="result-box">
+                <div class="calculation">
+                    <strong>Total Active Users</strong> (from Google Sheets): 5<br>
+                    <strong>Absent Users</strong> (from Timetastic): 3<br>
+                    <strong>Available Users</strong> (after filtering): 2
+                </div>
+                <div class="calculation" style="margin-top: 15px;">
+                    If 2 users checked in today:<br>
+                    <strong>Response Rate = (2 / 2) × 100 = 100%</strong>
+                </div>
+                <div class="calculation" style="background: #f8d7da; border-color: #dc3545;">
+                    Without Timetastic integration:<br>
+                    Response Rate = (2 / 5) × 100 = 40%
+                </div>
+                <p style="margin-top: 15px; font-weight: bold; color: #155724;">
+                    ✅ Improvement: +60% accuracy!
+                </p>
+            </div>
+            
+            <!-- Filtering Approach Comparison -->
+            <h2>⚖️ Filtering Approach Comparison</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Approach 1: Set Variable + Array Filter</th>
+                        <th>Approach 2: Iterator + Router</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Complexity</strong></td>
+                        <td>Low - 2 modules</td>
+                        <td>Medium - 3+ modules</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Performance</strong></td>
+                        <td>Fast - single pass</td>
+                        <td>Slower - iterates each user</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Debugging</strong></td>
+                        <td>Easier - see absent_emails variable</td>
+                        <td>Harder - need to check each iteration</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Flexibility</strong></td>
+                        <td>Limited - basic filtering only</td>
+                        <td>High - can add logging, notifications</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Best For</strong></td>
+                        <td>Simple filtering, production use</td>
+                        <td>Complex logic, debugging, logging</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recommended</strong></td>
+                        <td><span class="badge badge-success">✅ Yes - simpler and faster</span></td>
+                        <td><span class="badge badge-warning">⚠️ Use only if you need extra logic</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- Make Formula Reference -->
+            <h2>📝 Make Formula Reference</h2>
+            
+            <div class="formula-box">
+                <div class="formula-title">Extract Absent Emails</div>
+                <div class="formula-code">{{map(8A-2.array[].absences[]; get(8A-1.array[]; "email"; "id"; userId))}}</div>
+                <div class="formula-description">Maps each absent user's userId to their email from the users list</div>
+            </div>
+            
+            <div class="formula-box">
+                <div class="formula-title">Filter Condition</div>
+                <div class="formula-code">{{contains(absent_emails; 8.email)}} = false</div>
+                <div class="formula-description">Returns true if user's email is NOT in the absent list</div>
+            </div>
+            
+            <div class="formula-box">
+                <div class="formula-title">Count Available Users</div>
+                <div class="formula-code">{{length(11.array)}}</div>
+                <div class="formula-description">Counts the number of users in the filtered array</div>
+            </div>
+            
+            <div class="formula-box">
+                <div class="formula-title">Calculate Response Rate with Safety</div>
+                <div class="formula-code">{{if(12.total_available_members > 0; round((9.unique_users / 12.total_available_members) * 100; 1); 0)}}</div>
+                <div class="formula-description">
+                    • Checks if denominator > 0 to prevent division by zero<br>
+                    • Calculates percentage<br>
+                    • Rounds to 1 decimal place<br>
+                    • Returns 0 if no available members
+                </div>
+            </div>
+            
+            <!-- Edge Cases -->
+            <h2>🛡️ Edge Cases Handled</h2>
+            
+            <div class="edge-case">
+                <div class="edge-case-title">1. No Absences Today</div>
+                <p><strong>Timetastic Response:</strong> Empty absences array <code>[]</code></p>
+                <p><strong>absent_emails:</strong> Empty array <code>[]</code></p>
+                <p><strong>Result:</strong> All active users pass through filter <span class="checkmark">✓</span></p>
+            </div>
+            
+            <div class="edge-case">
+                <div class="edge-case-title">2. All Team Members Absent</div>
+                <p><strong>Timetastic Response:</strong> All users in absences</p>
+                <p><strong>absent_emails:</strong> Contains all user emails</p>
+                <p><strong>Result:</strong> Empty filtered array, response_rate = 0% <span class="checkmark">✓</span></p>
+            </div>
+            
+            <div class="edge-case">
+                <div class="edge-case-title">3. Partial Day Absences</div>
+                <p><strong>Timetastic Response:</strong> User has absence from 14:00-17:00</p>
+                <p><strong>Filtering Logic:</strong> User is still marked as absent for the day</p>
+                <p><strong>Result:</strong> User excluded from available count <span class="checkmark">✓</span></p>
+            </div>
+            
+            <div class="edge-case">
+                <div class="edge-case-title">4. API Failure</div>
+                <p><strong>Error Handling:</strong> Module 8A set to "Continue on error"</p>
+                <p><strong>Fallback:</strong> If API fails, absent_emails = empty array</p>
+                <p><strong>Result:</strong> All users counted (same as before integration) <span class="checkmark">✓</span></p>
+            </div>
+            
+            <div class="edge-case">
+                <div class="edge-case-title">5. Email Mismatch (case sensitivity)</div>
+                <p><strong>Problem:</strong> Google Sheets has "Alice@company.com", Timetastic has "alice@company.com"</p>
+                <p><strong>Solution:</strong> Use <code>lower()</code> function in filter condition</p>
+                <p><strong>Result:</strong> Case-insensitive matching <span class="checkmark">✓</span></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

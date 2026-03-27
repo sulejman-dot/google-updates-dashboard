@@ -1,0 +1,4 @@
+"Customer Id","First Name","Last Name","Card Type","Last4","Expiry Month","Expiry Year","Address Line1","Address Line2","Address City","Address State","Address Country","Address Zip","Status","Address State Code"
+"AzZf9GUWacMGT6xVM","","","MasterCard","5638","10","2029","","","","","","","Valid",""
+"16CVv4Sca7MQB639A","","","Visa","5283","11","2027","","","","","","","Valid",""
+"16A175S2An9pm131Y","Paulina","Maria Wartak","MasterCard","9702","7","2024","","","","","IT","","Expired",""

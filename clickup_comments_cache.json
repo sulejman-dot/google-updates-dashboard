@@ -1,0 +1,60 @@
+{
+  "last_updated": "2026-03-17T15:37:42.365Z",
+  "tasks": {
+    "869bwrnku": {
+      "name": "[bug][rt] AIO mentions metric is incorrect in competition",
+      "url": "https://app.clickup.com/t/869bwrnku",
+      "comments": []
+    },
+    "869c3mu4c": {
+      "name": "[bug][rt] AIS widget stuck with analyzing keywords",
+      "url": "https://app.clickup.com/t/869c3mu4c",
+      "comments": []
+    },
+    "869c3ebv5": {
+      "name": "[bug][dashboard] Visibility discrepancy",
+      "url": "https://app.clickup.com/t/869c3ebv5",
+      "comments": []
+    },
+    "869c3eftz": {
+      "name": "[improvement][looker] Competition Insights connector",
+      "url": "https://app.clickup.com/t/869c3eftz",
+      "comments": []
+    },
+    "869c3dy26": {
+      "name": "[bug][rt] Smart groups with AIS criteria showing 0 keywords",
+      "url": "https://app.clickup.com/t/869c3dy26",
+      "comments": []
+    },
+    "869c3dw22": {
+      "name": "[bug][research] SV for tracked kw in research",
+      "url": "https://app.clickup.com/t/869c3dw22",
+      "comments": []
+    },
+    "869c2tvk7": {
+      "name": "[bug][exports] Some of the competitors ranks are empty",
+      "url": "https://app.clickup.com/t/869c2tvk7",
+      "comments": []
+    },
+    "869c14cc2": {
+      "name": "[Bug][Rank Tracker] Client website not flagged for AIS mention",
+      "url": "https://app.clickup.com/t/869c14cc2",
+      "comments": []
+    },
+    "869c2p3ur": {
+      "name": "[bug][rt] AIS keywords stuck in processing",
+      "url": "https://app.clickup.com/t/869c2p3ur",
+      "comments": []
+    },
+    "869c2yr03": {
+      "name": "[feature request][exports] Allow bulk export for sublocations",
+      "url": "https://app.clickup.com/t/869c2yr03",
+      "comments": []
+    },
+    "869btgtqc": {
+      "name": "Proactive Quality Assurance & CSAT Recovery",
+      "url": "https://app.clickup.com/t/869btgtqc",
+      "comments": []
+    }
+  }
+}

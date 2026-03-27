@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-01-20T18:46:40.729137",
+  "total_checked": 4,
+  "incomplete_count": 0,
+  "all_items": [
+    {
+      "id": "#3329",
+      "missing": [],
+      "details": {
+        "assignee": "Found",
+        "priority": "Unknown",
+        "status": "Unknown"
+      }
+    },
+    {
+      "id": "#3983",
+      "missing": [],
+      "details": {
+        "assignee": "Found",
+        "priority": "Unknown",
+        "status": "Unknown"
+      }
+    },
+    {
+      "id": "#8677",
+      "missing": [],
+      "details": {
+        "assignee": "Found",
+        "priority": "Unknown",
+        "status": "Unknown"
+      }
+    },
+    {
+      "id": "#0529",
+      "missing": [],
+      "details": {
+        "assignee": "Found",
+        "priority": "Unknown",
+        "status": "Unknown"
+      }
+    }
+  ],
+  "incomplete_items": []
+}

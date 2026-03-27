@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-01-20T19:01:25.117351",
+  "filter_applied": "Not state: Done",
+  "total_checked": 1,
+  "incomplete_count": 1,
+  "all_items": [
+    {
+      "id": "#3983",
+      "missing": [
+        "Assignee"
+      ],
+      "details": {
+        "assignee": "\u274c Unassigned",
+        "priority": "\u2753 Unknown",
+        "status": "\u2753 Unknown"
+      },
+      "url": "https://app.usersnap.com/#/projects/31a2ba9a-4a79-42c7-9218-c8782d4a1435/list?number=3983&text=Not%2520state%253A%2520Done&url=Not%2520state%253A%2520Done"
+    }
+  ],
+  "incomplete_items": [
+    {
+      "id": "#3983",
+      "url": "https://app.usersnap.com/#/projects/31a2ba9a-4a79-42c7-9218-c8782d4a1435/list?number=3983&text=Not%2520state%253A%2520Done&url=Not%2520state%253A%2520Done",
+      "missing": [
+        "Assignee"
+      ],
+      "details": {
+        "assignee": "\u274c Unassigned",
+        "priority": "\u2753 Unknown",
+        "status": "\u2753 Unknown"
+      }
+    }
+  ]
+}

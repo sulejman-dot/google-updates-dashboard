@@ -1,0 +1,32 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🕐 2026-03-18 14:12:02 — Daily Guru scan starting
+📋 Tracker: 6 previously processed threads
+📡 Fetching from #technical-questions (last 7 days)...
+   Found 10 messages, 1 with threads
+
+🔍 Analyzing 1 threads...
+
+  [1] ✅ Already has Guru card: "If ai search os enabled the grace period dosen t apply..."
+
+============================================================
+📊 Summary:
+   📝 Needs Guru card (content created): 0
+   ✅ Already has Guru card:             1
+   🚫 No card needed:                    0
+   ⏭️  No answer yet:                     0
+
+   📂 Markdown: /Users/user/Library/CloudStorage/GoogleDrive-sulejman@seomonitor.com/My Drive/cosmin folder/Sulejman Workspace/guru_cards
+   🗄️  Database: 631 guru cards, 2 pending
+[main 3777673] Update dashboard data
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+To https://github.com/sulejman-dot/guru-dashboard.git
+   d17cf63..3777673  main -> main
+📦 Exporting dashboard data...
+   Using CSV: guru_card_export (1).csv
+   ✅ Exported 631 cards + 2 pending → data.json
+   📊 Categories: Rank Tracking, Analytics, AI Features, Forecast, General, Billing & Plans, Reports, Integrations, Onboarding, Data & Metrics, Campaigns, Content, Competition
+
+🚀 Pushing to GitHub...
+   ✅ Pushed to GitHub — Netlify will auto-deploy!
+✅ 2026-03-18 14:12:05 — Done
+
