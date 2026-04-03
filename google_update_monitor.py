@@ -1,6 +1,9 @@
 import os
+import sys
 import json
 import time
+import uuid
+import tempfile
 import requests as req
 import feedparser
 import re
@@ -18,6 +21,36 @@ CLICKUP_API_KEY = os.getenv("CLICKUP_API_KEY")
 
 GOOGLE_STATUS_URL = "https://status.search.google.com/incidents.json"
 SER_RSS_URL = "https://www.seroundtable.com/index.xml"
+SEJ_RSS_URL = "https://www.searchenginejournal.com/feed/"
+SEL_RSS_URL = "https://searchengineland.com/feed"
+GOOGLE_BLOG_RSS_URL = "https://blog.google/products/search/rss/"
+
+# Competitor Blog RSS Feeds
+COMPETITOR_FEEDS = {
+    "SEMrush": "https://www.semrush.com/blog/feed/",
+    "Ahrefs": "https://ahrefs.com/blog/feed/",
+    "SE Ranking": "https://seranking.com/blog/feed/",
+    "Sistrix": "https://www.sistrix.com/feed/",
+    "Moz": "https://moz.com/blog/feed",
+}
+
+# Full competitor list for Reddit/HN community searches
+COMPETITOR_NAMES = [
+    "semrush", "ahrefs", "se ranking", "seranking", "accuranker",
+    "sistrix", "brightedge", "conductor seo", "moz pro",
+    "advanced web ranking", "surfer seo", "surferseo"
+]
+
+# AI/LLM keywords for special flagging
+AI_LLM_KEYWORDS = [
+    'ai ', 'llm', 'ai-', 'artificial intelligence', 'machine learning',
+    'gpt', 'large language model', 'generative ai', 'ai overview',
+    'aio', 'ai search', 'ai tracking', 'ai content', 'ai writing',
+    'chatgpt', 'gemini', 'claude', 'perplexity', 'searchgpt',
+    'ai visibility', 'llm monitoring', 'ai optimization',
+    'ai-powered', 'genai', 'copilot', 'ai agent'
+]
+
 STATE_FILE = "google_updates_state.json"
 DASHBOARD_FILE = "dashboard/dashboard_data.json"
 dashboard_alerts = []
@@ -33,7 +66,10 @@ def load_state():
     # Support migration of older state files
     state = {
         "seen_updates": {}, "seen_articles": [], "seen_ugc": [], 
-        "seen_brand_mentions": [], "seen_hn_brand_mentions": [], "seen_hn_ugc": []
+        "seen_brand_mentions": [], "seen_hn_brand_mentions": [], "seen_hn_ugc": [],
+        "seen_sej_articles": [], "seen_sel_articles": [], "seen_google_blog": [],
+        "seen_brand_comments": [],
+        "seen_competitor_blog": [], "seen_competitor_reddit": [], "seen_competitor_hn": []
     }
     if os.path.exists(STATE_FILE):
         try:
@@ -78,10 +114,14 @@ def send_slack_alert(title, status, severity, full_url, latest_text, is_new, sou
     color = "#FFA500" # Orange default
     icon = "⚠️"
     
-    if source_name == "Search Engine Roundtable":
+    if source_name in ("Search Engine Roundtable", "Search Engine Journal", "Search Engine Land"):
         color = "#1E90FF" # Blue for community news
         icon = "📰"
-        action_text = "📰 *New SEO Community Report*"
+        action_text = f"📰 *New SEO Community Report ({source_name})*"
+    elif source_name == "Google Search Blog":
+        color = "#0F9D58" # Google green
+        icon = "📢"
+        action_text = "📢 *New Google Official Blog Post*"
     elif status == "UGC Discussion":
         color = "#FF4500" # Reddit orange
         icon = "🗣️"
@@ -99,6 +139,15 @@ def send_slack_alert(title, status, severity, full_url, latest_text, is_new, sou
             color = "#FFA500"
             icon = "🗣️"
             action_text = "🗣️ *New SEOmonitor Mention*"
+    elif status == "Competitor Update":
+        if "🤖" in severity or "AI" in severity:
+            color = "#9B59B6" # Purple for AI/LLM
+            icon = "🤖"
+            action_text = f"🤖 *Competitor AI/LLM Update: {source_name}*"
+        else:
+            color = "#E67E22" # Orange for regular competitor update
+            icon = "🏢"
+            action_text = f"🏢 *Competitor Update: {source_name}*"
     elif status == "SERP Feature Change":
         color = "#8A2BE2" # Purple
         icon = "✨"
@@ -394,8 +443,8 @@ def check_brand_mentions(state):
         if not post_id or post_id in seen_mentions:
             continue
             
-        # Discard posts older than 7 days
-        if time.time() - created_utc > 7 * 86400:
+        # Discard posts older than 90 days (brand mentions are rare)
+        if time.time() - created_utc > 90 * 86400:
             continue
             
         title = data.get('title', '')
@@ -464,7 +513,7 @@ def check_hn_brand_mentions(state):
             continue
             
         created_at_i = post.get('created_at_i', 0)
-        if time.time() - created_at_i > 7 * 86400:
+        if time.time() - created_at_i > 90 * 86400:
             continue
             
         title = post.get('title') or post.get('story_title') or ""
@@ -582,17 +631,530 @@ def check_hn_ugc(state):
     state["seen_hn_ugc"] = seen_ugc
     return changes_made, state
 
+def check_sej_rss(state):
+    """Check Search Engine Journal RSS for Google algo news."""
+    print(f"[{datetime.now().isoformat()}] Checking Search Engine Journal RSS...")
+    changes_made = False
+    seen_articles = state.get("seen_sej_articles", [])
+    
+    try:
+        feed = feedparser.parse(SEJ_RSS_URL)
+        if feed.bozo:
+            print(f"⚠️ SEJ RSS parse warning: {feed.bozo_exception}")
+    except Exception as e:
+        print(f"❌ Failed to fetch/parse SEJ RSS: {e}")
+        return changes_made, state
+        
+    keyword_triggers = [
+        'algorithm', 'core update', 'spam update', 'volatility', 'ranking',
+        'unconfirmed update', 'glitch', 'algo update', 'traffic drop',
+        'search update', 'indexing', 'crawling', 'penalty'
+    ]
+    
+    for entry in feed.entries[:15]:
+        article_id = entry.get('id', entry.get('link'))
+        title = entry.get('title', '')
+        link = entry.get('link', '')
+        summary = entry.get('summary', '')[:300] + "..."
+        
+        title_lower = title.lower()
+        if 'google' not in title_lower:
+            continue
+        if not any(kw in title_lower for kw in keyword_triggers):
+            continue
+            
+        if article_id not in seen_articles:
+            print(f"📰 Found SEJ article: {title}")
+            send_slack_alert(
+                title=title,
+                status="Community Report",
+                severity="Info/Unconfirmed",
+                full_url=link,
+                latest_text=summary,
+                is_new=True,
+                source_name="Search Engine Journal"
+            )
+            seen_articles.append(article_id)
+            changes_made = True
+            
+    if len(seen_articles) > 100:
+        seen_articles = seen_articles[-50:]
+        
+    state["seen_sej_articles"] = seen_articles
+    return changes_made, state
+
+def check_sel_rss(state):
+    """Check Search Engine Land RSS for Google algo news."""
+    print(f"[{datetime.now().isoformat()}] Checking Search Engine Land RSS...")
+    changes_made = False
+    seen_articles = state.get("seen_sel_articles", [])
+    
+    try:
+        feed = feedparser.parse(SEL_RSS_URL)
+        if feed.bozo:
+            print(f"⚠️ SEL RSS parse warning: {feed.bozo_exception}")
+    except Exception as e:
+        print(f"❌ Failed to fetch/parse SEL RSS: {e}")
+        return changes_made, state
+        
+    keyword_triggers = [
+        'algorithm', 'core update', 'spam update', 'volatility', 'ranking update',
+        'search update', 'indexing change', 'crawling change', 'penalty',
+        'helpful content', 'link spam', 'manual action'
+    ]
+    
+    for entry in feed.entries[:15]:
+        article_id = entry.get('id', entry.get('link'))
+        title = entry.get('title', '')
+        link = entry.get('link', '')
+        summary = entry.get('summary', '')[:300] + "..."
+        
+        title_lower = title.lower()
+        if 'google' not in title_lower:
+            continue
+        if not any(kw in title_lower for kw in keyword_triggers):
+            continue
+            
+        if article_id not in seen_articles:
+            print(f"📰 Found SEL article: {title}")
+            send_slack_alert(
+                title=title,
+                status="Community Report",
+                severity="Info/Unconfirmed",
+                full_url=link,
+                latest_text=summary,
+                is_new=True,
+                source_name="Search Engine Land"
+            )
+            seen_articles.append(article_id)
+            changes_made = True
+            
+    if len(seen_articles) > 100:
+        seen_articles = seen_articles[-50:]
+        
+    state["seen_sel_articles"] = seen_articles
+    return changes_made, state
+
+def check_google_blog_rss(state):
+    """Check Google Search Blog for official announcements."""
+    print(f"[{datetime.now().isoformat()}] Checking Google Search Blog RSS...")
+    changes_made = False
+    seen_articles = state.get("seen_google_blog", [])
+    
+    try:
+        feed = feedparser.parse(GOOGLE_BLOG_RSS_URL)
+        if feed.bozo:
+            print(f"⚠️ Google Blog RSS parse warning: {feed.bozo_exception}")
+    except Exception as e:
+        print(f"❌ Failed to fetch/parse Google Blog RSS: {e}")
+        return changes_made, state
+        
+    keyword_triggers = [
+        'search ranking', 'search update', 'core update', 'algorithm', 'indexing',
+        'crawl', 'spam', 'search quality', 'helpful content', 'webmaster',
+        'ai overview', 'search console', 'search generative', 'web search',
+        'google search', 'structured data', 'rich result'
+    ]
+    
+    for entry in feed.entries[:10]:
+        article_id = entry.get('id', entry.get('link'))
+        title = entry.get('title', '')
+        link = entry.get('link', '')
+        summary = entry.get('summary', '')[:300] + "..."
+        
+        title_lower = title.lower()
+        if not any(kw in title_lower for kw in keyword_triggers):
+            continue
+            
+        if article_id not in seen_articles:
+            print(f"📢 Found Google Blog post: {title}")
+            send_slack_alert(
+                title=title,
+                status="Official Announcement",
+                severity="Official",
+                full_url=link,
+                latest_text=summary,
+                is_new=True,
+                source_name="Google Search Blog"
+            )
+            seen_articles.append(article_id)
+            changes_made = True
+            
+    if len(seen_articles) > 100:
+        seen_articles = seen_articles[-50:]
+        
+    state["seen_google_blog"] = seen_articles
+    return changes_made, state
+
+def check_reddit_brand_comments(state):
+    """Check Reddit comments (not just posts) for SEOmonitor mentions."""
+    print(f"[{datetime.now().isoformat()}] Checking Reddit Comments for SEOmonitor mentions...")
+    changes_made = False
+    seen_comments = state.get("seen_brand_comments", [])
+    
+    headers = {"User-Agent": "mac:brand_monitor:v1.0 (by /u/SEOMonitor)"}
+    url = "https://www.reddit.com/search.json?q=seomonitor&type=comment&sort=new&limit=25"
+    
+    try:
+        resp = req.get(url, headers=headers, timeout=15)
+        resp.raise_for_status()
+        comments = resp.json().get('data', {}).get('children', [])
+    except Exception as e:
+        print(f"❌ Failed to fetch Reddit comments: {e}")
+        return changes_made, state
+        
+    new_mentions = []
+    
+    for comment in comments:
+        data = comment.get('data', {})
+        comment_id = data.get('id')
+        created_utc = data.get('created_utc', 0)
+        
+        if not comment_id or comment_id in seen_comments:
+            continue
+            
+        # Only comments from last 14 days
+        if time.time() - created_utc > 30 * 86400:
+            continue
+            
+        body = data.get('body', '')
+        link_title = data.get('link_title', '')
+        permalink = data.get('permalink', '')
+        link = f"https://www.reddit.com{permalink}"
+        subreddit = data.get('subreddit', 'Unknown')
+        
+        # Must actually mention seomonitor
+        if 'seomonitor' not in body.lower():
+            continue
+            
+        score, label = analyze_sentiment(body)
+        
+        new_mentions.append({
+            'comment_id': comment_id,
+            'title': link_title or f"Comment in r/{subreddit}",
+            'text': body[:300] + "..." if len(body) > 300 else body,
+            'link': link,
+            'score': score,
+            'label': label,
+            'subreddit': subreddit
+        })
+    
+    # Negative first
+    new_mentions.sort(key=lambda x: x['score'])
+    
+    for mention in new_mentions:
+        print(f"💬 Found Brand Comment ({mention['label']}): {mention['title'][:60]}")
+        send_slack_alert(
+            title=f"{mention['label']} Comment in r/{mention['subreddit']}",
+            status="Brand Mention",
+            severity=mention['label'],
+            full_url=mention['link'],
+            latest_text=f"*{mention['title']}*\n{mention['text']}",
+            is_new=True,
+            source_name=f"Reddit Comment (r/{mention['subreddit']})"
+        )
+        seen_comments.append(mention['comment_id'])
+        changes_made = True
+    
+    if len(seen_comments) > 200:
+        seen_comments = seen_comments[-100:]
+        
+    state["seen_brand_comments"] = seen_comments
+    return changes_made, state
+
+def is_ai_related(text):
+    """Check if text contains AI/LLM related keywords."""
+    text_lower = text.lower()
+    return any(kw in text_lower for kw in AI_LLM_KEYWORDS)
+
+def check_competitor_blogs(state):
+    """Check competitor blog RSS feeds for product updates."""
+    print(f"[{datetime.now().isoformat()}] Checking Competitor Blog RSS feeds...")
+    changes_made = False
+    seen_articles = state.get("seen_competitor_blog", [])
+    
+    # Keywords that signal a product update (not just content marketing)
+    product_keywords = [
+        'new feature', 'product update', 'release', 'changelog', 'launch',
+        'announcing', 'introducing', 'now available', 'just launched',
+        'update:', 'what\'s new', 'beta', 'integration', 'api',
+        'rank track', 'serp', 'keyword', 'backlink', 'audit',
+        'dashboard', 'report', 'tool', 'platform'
+    ]
+    
+    for competitor_name, feed_url in COMPETITOR_FEEDS.items():
+        try:
+            feed = feedparser.parse(feed_url)
+            if feed.bozo and len(feed.entries) == 0:
+                print(f"  ⚠️ {competitor_name} RSS parse error: {feed.bozo_exception}")
+                continue
+        except Exception as e:
+            print(f"  ❌ Failed to fetch {competitor_name} RSS: {e}")
+            continue
+            
+        for entry in feed.entries[:10]:
+            article_id = entry.get('id', entry.get('link', ''))
+            title = entry.get('title', '')
+            link = entry.get('link', '')
+            summary = entry.get('summary', '')[:400]
+            
+            if article_id in seen_articles:
+                continue
+            
+            combined_text = f"{title} {summary}".lower()
+            
+            # Must be a product-related post (not pure content marketing)
+            if not any(kw in combined_text for kw in product_keywords):
+                continue
+            
+            # Determine if AI/LLM related
+            ai_flag = is_ai_related(combined_text)
+            severity = "🤖 AI/LLM" if ai_flag else "Product Update"
+            
+            label = f"{'🤖 ' if ai_flag else ''}{competitor_name}"
+            print(f"  🏢 Found {label} update: {title[:60]}")
+            
+            send_slack_alert(
+                title=f"[{competitor_name}] {title}",
+                status="Competitor Update",
+                severity=severity,
+                full_url=link,
+                latest_text=summary[:300] + "...",
+                is_new=True,
+                source_name=competitor_name
+            )
+            seen_articles.append(article_id)
+            changes_made = True
+    
+    if len(seen_articles) > 300:
+        seen_articles = seen_articles[-150:]
+        
+    state["seen_competitor_blog"] = seen_articles
+    return changes_made, state
+
+def check_competitor_reddit(state):
+    """Check Reddit for competitor product updates and discussions."""
+    print(f"[{datetime.now().isoformat()}] Checking Reddit for Competitor Updates...")
+    changes_made = False
+    seen_posts = state.get("seen_competitor_reddit", [])
+    
+    headers = {"User-Agent": "mac:competitor_monitor:v1.0 (by /u/SEOMonitor)"}
+    
+    # Search for competitor product updates on Reddit
+    search_terms = [
+        "semrush new feature", "semrush update", "semrush ai",
+        "ahrefs new feature", "ahrefs update", "ahrefs ai",
+        "se ranking update", "accuranker update",
+        "sistrix update", "brightedge ai",
+        "moz pro update", "surfer seo ai"
+    ]
+    
+    all_posts = []
+    for term in search_terms:
+        try:
+            url = f"https://www.reddit.com/search.json?q={term}&sort=new&limit=10&t=month"
+            resp = req.get(url, headers=headers, timeout=10)
+            resp.raise_for_status()
+            posts = resp.json().get('data', {}).get('children', [])
+            all_posts.extend(posts)
+            time.sleep(0.5)  # Rate limiting
+        except Exception as e:
+            continue
+    
+    # Deduplicate by post ID
+    unique_posts = {}
+    for post in all_posts:
+        post_id = post.get('data', {}).get('id')
+        if post_id and post_id not in unique_posts:
+            unique_posts[post_id] = post
+    
+    new_items = []
+    for post in unique_posts.values():
+        data = post.get('data', {})
+        post_id = data.get('id')
+        created_utc = data.get('created_utc', 0)
+        
+        if not post_id or post_id in seen_posts:
+            continue
+            
+        # Only last 30 days
+        if time.time() - created_utc > 30 * 86400:
+            continue
+        
+        title = data.get('title', '')
+        selftext = data.get('selftext', '')[:300]
+        link = f"https://www.reddit.com{data.get('permalink', '')}"
+        subreddit = data.get('subreddit', '')
+        
+        combined_text = f"{title} {selftext}".lower()
+        
+        # Identify which competitor this is about
+        matched_competitor = None
+        for comp_name in COMPETITOR_NAMES:
+            if comp_name in combined_text:
+                matched_competitor = comp_name.title()
+                break
+        
+        if not matched_competitor:
+            continue
+            
+        # Determine if AI/LLM related
+        ai_flag = is_ai_related(combined_text)
+        severity = "🤖 AI/LLM" if ai_flag else "Product Discussion"
+        
+        new_items.append({
+            'post_id': post_id,
+            'title': title,
+            'text': selftext,
+            'link': link,
+            'competitor': matched_competitor,
+            'subreddit': subreddit,
+            'severity': severity,
+            'ai_flag': ai_flag,
+            'created_utc': created_utc
+        })
+    
+    # AI-related first, then by recency
+    new_items.sort(key=lambda x: (not x['ai_flag'], -x['created_utc']))
+    
+    for item in new_items[:10]:  # Cap at 10 per run to avoid flooding
+        label = f"{'🤖 ' if item['ai_flag'] else '🏢 '}{item['competitor']}"
+        print(f"  {label} Reddit discussion: {item['title'][:60]}")
+        
+        send_slack_alert(
+            title=f"[{item['competitor']}] {item['title']}",
+            status="Competitor Update",
+            severity=item['severity'],
+            full_url=item['link'],
+            latest_text=item['text'],
+            is_new=True,
+            source_name=f"Reddit (r/{item['subreddit']})"
+        )
+        seen_posts.append(item['post_id'])
+        changes_made = True
+    
+    if len(seen_posts) > 300:
+        seen_posts = seen_posts[-150:]
+        
+    state["seen_competitor_reddit"] = seen_posts
+    return changes_made, state
+
+def check_competitor_hn(state):
+    """Check Hacker News for competitor product announcements."""
+    print(f"[{datetime.now().isoformat()}] Checking Hacker News for Competitor Updates...")
+    changes_made = False
+    seen_posts = state.get("seen_competitor_hn", [])
+    
+    headers = {"User-Agent": "mac:competitor_monitor:v1.0"}
+    
+    search_terms = ["semrush", "ahrefs", "sistrix", "accuranker", "brightedge", "moz seo"]
+    
+    for term in search_terms:
+        try:
+            url = f"https://hn.algolia.com/api/v1/search_by_date?query={term}&tags=story&hitsPerPage=5"
+            resp = req.get(url, headers=headers, timeout=10)
+            resp.raise_for_status()
+            hits = resp.json().get('hits', [])
+        except Exception as e:
+            continue
+        
+        for hit in hits:
+            post_id = hit.get('objectID')
+            created_at_i = hit.get('created_at_i', 0)
+            
+            if not post_id or post_id in seen_posts:
+                continue
+                
+            # Only last 30 days
+            if time.time() - created_at_i > 30 * 86400:
+                continue
+            
+            title = hit.get('title', '')
+            url_link = hit.get('url', '') or f"https://news.ycombinator.com/item?id={post_id}"
+            hn_link = f"https://news.ycombinator.com/item?id={post_id}"
+            points = hit.get('points', 0)
+            
+            # Only significant discussions (5+ points)
+            if points < 5:
+                continue
+            
+            # Identify competitor
+            title_lower = title.lower()
+            matched_competitor = None
+            for comp_name in COMPETITOR_NAMES:
+                if comp_name in title_lower:
+                    matched_competitor = comp_name.title()
+                    break
+            
+            if not matched_competitor:
+                continue
+            
+            ai_flag = is_ai_related(title_lower)
+            severity = "🤖 AI/LLM" if ai_flag else "Product Discussion"
+            
+            label = f"{'🤖 ' if ai_flag else '🏢 '}{matched_competitor}"
+            print(f"  {label} HN post ({points}pts): {title[:60]}")
+            
+            send_slack_alert(
+                title=f"[{matched_competitor}] {title}",
+                status="Competitor Update",
+                severity=severity,
+                full_url=hn_link,
+                latest_text=f"Discussion on Hacker News ({points} points)\n🔗 Original: {url_link}",
+                is_new=True,
+                source_name="Hacker News"
+            )
+            seen_posts.append(post_id)
+            changes_made = True
+    
+    if len(seen_posts) > 200:
+        seen_posts = seen_posts[-100:]
+        
+    state["seen_competitor_hn"] = seen_posts
+    return changes_made, state
+
 def main():
     state = load_state()
     
-    changes_a, state = check_official_google_updates(state)
-    changes_b, state = check_seo_news_rss(state)
-    changes_c, state = check_reddit_ugc(state)
-    changes_d, state = check_brand_mentions(state)
-    changes_e, state = check_hn_ugc(state)
-    changes_f, state = check_hn_brand_mentions(state)
+    all_changes = []
     
-    if any([changes_a, changes_b, changes_c, changes_d, changes_e, changes_f]):
+    # Official sources
+    changes, state = check_official_google_updates(state)
+    all_changes.append(changes)
+    
+    # Community news RSS
+    changes, state = check_seo_news_rss(state)
+    all_changes.append(changes)
+    changes, state = check_sej_rss(state)
+    all_changes.append(changes)
+    changes, state = check_sel_rss(state)
+    all_changes.append(changes)
+    changes, state = check_google_blog_rss(state)
+    all_changes.append(changes)
+    
+    # UGC discussions
+    changes, state = check_reddit_ugc(state)
+    all_changes.append(changes)
+    changes, state = check_hn_ugc(state)
+    all_changes.append(changes)
+    
+    # Brand mentions (posts + comments)
+    changes, state = check_brand_mentions(state)
+    all_changes.append(changes)
+    changes, state = check_reddit_brand_comments(state)
+    all_changes.append(changes)
+    changes, state = check_hn_brand_mentions(state)
+    all_changes.append(changes)
+    
+    # Competitor intelligence
+    changes, state = check_competitor_blogs(state)
+    all_changes.append(changes)
+    changes, state = check_competitor_reddit(state)
+    all_changes.append(changes)
+    changes, state = check_competitor_hn(state)
+    all_changes.append(changes)
+    
+    if any(all_changes):
         save_state(state)
         print("💾 State updated across all sources.")
     else:
@@ -607,8 +1169,12 @@ def main():
             else:
                 data = []
             
+            # Deduplicate by URL before adding
+            existing_urls = {item.get('url') for item in data}
+            new_alerts = [a for a in dashboard_alerts if a.get('url') not in existing_urls]
+            
             # Prepend new alerts
-            data = dashboard_alerts + data
+            data = new_alerts + data
             # Keep rolling history of max 500
             data = data[:500]
             
@@ -616,13 +1182,14 @@ def main():
                 json.dump(data, tf, indent=4)
                 tmp_file = tf.name
             os.replace(tmp_file, DASHBOARD_FILE)
-            print(f"📈 Added {len(dashboard_alerts)} new alerts to {DASHBOARD_FILE}.")
+            print(f"📈 Added {len(new_alerts)} new alerts to {DASHBOARD_FILE} ({len(dashboard_alerts) - len(new_alerts)} duplicates skipped).")
             
             # Attempt to auto-commit and push so Netlify auto-deploys
-            print("📦 Attempting to sync dashboard data with GitHub...")
-            subprocess.run(["git", "add", DASHBOARD_FILE], check=False)
-            subprocess.run(["git", "commit", "-m", f"Dashboard datasync: {len(dashboard_alerts)} new automated alerts"], check=False)
-            subprocess.run(["git", "push"], check=False)
+            if new_alerts:
+                print("📦 Attempting to sync dashboard data with GitHub...")
+                subprocess.run(["git", "add", DASHBOARD_FILE], check=False)
+                subprocess.run(["git", "commit", "-m", f"Dashboard datasync: {len(new_alerts)} new automated alerts"], check=False)
+                subprocess.run(["git", "push"], check=False)
         except Exception as e:
             print(f"❌ Failed to locally save or push dashboard data: {e}")
 

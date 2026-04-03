@@ -16,6 +16,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (severity.includes("Negative")) return "badge negative";
             return "badge neutral";
         }
+        if (status === "Competitor Update") {
+            if (severity.includes("AI") || severity.includes("🤖")) return "badge ai-llm";
+            return "badge competitor";
+        }
         if (status === "SERP Feature Change") return "badge feature";
         if (status === "UGC Discussion") return "badge neutral";
         return "badge default"; // Official/Other
@@ -36,11 +40,15 @@ document.addEventListener("DOMContentLoaded", () => {
             card.style.animationDelay = `${index * 0.05}s`;
 
             const badgeClass = getBadgeClass(alert.status, alert.severity);
-            const badgeText = alert.status === "Brand Mention" ? alert.severity : alert.status;
+            const badgeText = alert.status === "Brand Mention" ? alert.severity : 
+                              alert.status === "Competitor Update" ? alert.severity : alert.status;
 
             // Source icon
             let sourceIcon = "🌐";
-            if (alert.source.includes("Reddit")) sourceIcon = "🗣️";
+            if (alert.status === "Competitor Update") {
+                if (alert.severity.includes("AI") || alert.severity.includes("🤖")) sourceIcon = "🤖";
+                else sourceIcon = "🏢";
+            } else if (alert.source.includes("Reddit")) sourceIcon = "🗣️";
             else if (alert.source.includes("Hacker News")) sourceIcon = "💻";
             else if (alert.source.includes("Roundtable") || alert.source.includes("Journal") || alert.source.includes("Land")) sourceIcon = "📰";
             else if (alert.source.includes("Google Search Blog")) sourceIcon = "📢";
@@ -66,6 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const updateStats = (data) => {
         document.getElementById("stat-total").innerText = data.length;
         document.getElementById("stat-mentions").innerText = data.filter(d => d.status === "Brand Mention").length;
+        document.getElementById("stat-competitors").innerText = data.filter(d => d.status === "Competitor Update").length;
     };
 
     // Filter Logic
@@ -80,6 +89,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 filteredData = allData.filter(d => 
                     ["UGC Discussion", "Community Report", "SERP Feature Change", "Official Announcement"].includes(d.status)
                 );
+            } else if (filterParam === "competitor") {
+                filteredData = allData.filter(d => d.status === "Competitor Update");
             } else {
                 filteredData = allData.filter(d => d.status === filterParam);
             }

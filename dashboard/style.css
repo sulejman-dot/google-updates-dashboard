@@ -216,6 +216,8 @@ h1 span {
 .badge.negative { background: rgba(224, 30, 90, 0.15); color: var(--accent-red); border: 1px solid rgba(224, 30, 90, 0.3); }
 .badge.neutral { background: rgba(255, 165, 0, 0.15); color: var(--accent-orange); border: 1px solid rgba(255, 165, 0, 0.3); }
 .badge.feature { background: rgba(138, 43, 226, 0.15); color: #B388FF; border: 1px solid rgba(138, 43, 226, 0.3); }
+.badge.competitor { background: rgba(230, 126, 34, 0.15); color: #F0A050; border: 1px solid rgba(230, 126, 34, 0.3); }
+.badge.ai-llm { background: linear-gradient(135deg, rgba(155, 89, 182, 0.2), rgba(52, 152, 219, 0.2)); color: #BB86FC; border: 1px solid rgba(155, 89, 182, 0.4); box-shadow: 0 0 12px rgba(155, 89, 182, 0.15); }
 .badge.default { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); }
 
 .card-date {
