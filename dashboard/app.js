@@ -143,6 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Scroll-reveal with IntersectionObserver
+        const cards = document.querySelectorAll('.card-reveal');
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -150,9 +151,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     observer.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+        }, { threshold: 0.05, rootMargin: '50px 0px 50px 0px' });
 
-        document.querySelectorAll('.card-reveal').forEach(card => observer.observe(card));
+        cards.forEach(card => observer.observe(card));
+
+        // Force-reveal cards already in viewport (fixes filter → invisible cards bug)
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                cards.forEach(card => {
+                    if (!card.classList.contains('revealed')) {
+                        const rect = card.getBoundingClientRect();
+                        if (rect.top < window.innerHeight + 100) {
+                            card.classList.add('revealed');
+                            observer.unobserve(card);
+                        }
+                    }
+                });
+            }, 100);
+        });
 
         // Expand/collapse handlers
         document.querySelectorAll('.card-expand-btn').forEach(btn => {
@@ -175,11 +191,12 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // ─── Filter Counts ──────────────────────────────────────
+    const ALGO_STATUSES = ["UGC Discussion", "Community Report", "SERP Feature Change", "Official Announcement", "SERVICE_INFORMATION", "AVAILABLE", "RESOLVED"];
+
     const updateFilterCounts = (data) => {
-        const algoStatuses = ["UGC Discussion", "Community Report", "SERP Feature Change", "Official Announcement"];
         document.getElementById("count-all").textContent = data.length;
         document.getElementById("count-brand").textContent = data.filter(d => d.status === "Brand Mention").length;
-        document.getElementById("count-algo").textContent = data.filter(d => algoStatuses.includes(d.status)).length;
+        document.getElementById("count-algo").textContent = data.filter(d => ALGO_STATUSES.includes(d.status)).length;
         document.getElementById("count-comp").textContent = data.filter(d => d.status === "Competitor Update").length;
         document.getElementById("count-serp").textContent = data.filter(d => d.status === "SERP Feature Change").length;
         document.getElementById("count-official").textContent = data.filter(d => d.source === "Google Status Dashboard").length;
@@ -194,9 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (currentFilter === "official") {
                 data = data.filter(d => d.source === "Google Status Dashboard");
             } else if (currentFilter === "algo_chatter") {
-                data = data.filter(d => 
-                    ["UGC Discussion", "Community Report", "SERP Feature Change", "Official Announcement"].includes(d.status)
-                );
+                data = data.filter(d => ALGO_STATUSES.includes(d.status));
             } else if (currentFilter === "competitor") {
                 data = data.filter(d => d.status === "Competitor Update");
             } else {
