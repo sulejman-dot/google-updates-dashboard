@@ -42,7 +42,8 @@ document.addEventListener("DOMContentLoaded", () => {
             let sourceIcon = "🌐";
             if (alert.source.includes("Reddit")) sourceIcon = "🗣️";
             else if (alert.source.includes("Hacker News")) sourceIcon = "💻";
-            else if (alert.source.includes("Roundtable")) sourceIcon = "📰";
+            else if (alert.source.includes("Roundtable") || alert.source.includes("Journal") || alert.source.includes("Land")) sourceIcon = "📰";
+            else if (alert.source.includes("Google Search Blog")) sourceIcon = "📢";
             else if (alert.source.includes("Google")) sourceIcon = "📣";
 
             card.innerHTML = `
@@ -72,7 +73,13 @@ document.addEventListener("DOMContentLoaded", () => {
         let filteredData = allData;
         if (filterParam !== "all") {
             if (filterParam === "official") {
-                filteredData = allData.filter(d => !["Brand Mention", "UGC Discussion", "SERP Feature Change"].includes(d.status));
+                // Only real Google Status Dashboard entries
+                filteredData = allData.filter(d => d.source === "Google Status Dashboard");
+            } else if (filterParam === "algo_chatter") {
+                // Community news, UGC discussions, SERP feature changes, official blog posts
+                filteredData = allData.filter(d => 
+                    ["UGC Discussion", "Community Report", "SERP Feature Change", "Official Announcement"].includes(d.status)
+                );
             } else {
                 filteredData = allData.filter(d => d.status === filterParam);
             }
