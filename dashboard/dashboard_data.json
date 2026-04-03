@@ -1,5 +1,82 @@
 [
     {
+        "id": "c773d8b7-0b72-4b4c-95c9-d1e0d1a0599e",
+        "date": "2026-04-03T08:22:44.333533",
+        "title": "Google Answers Why Core Updates Can Roll Out In Stages via @sejournal, @martinibuster",
+        "status": "Community Report",
+        "severity": "Info/Unconfirmed",
+        "url": "https://www.searchenginejournal.com/google-answers-why-core-updates-can-roll-out-in-stages/571003/",
+        "text": "<p>Google's John Mueller answered a question about the nature of core updates: Are they rolled out in steps or all at once then refined?</p>\n<p>The post <a href=\"https://www.searchenginejournal.com/google-answers-why-core-updates-can-roll-out-in-stages/571003/\">Google Answers Why Core Updates Can Ro...",
+        "source": "Search Engine Journal",
+        "is_new": true
+    },
+    {
+        "id": "f9505ad9-d3e1-4635-9097-4c07a3f2eba8",
+        "date": "2026-04-03T08:22:45.856123",
+        "title": "Google Explains Googlebot Byte Limits And Crawling Architecture via @sejournal, @MattGSouthern",
+        "status": "Community Report",
+        "severity": "Info/Unconfirmed",
+        "url": "https://www.searchenginejournal.com/google-explains-googlebot-byte-limits-and-crawling-architecture/570961/",
+        "text": "<p>Google's Gary Illyes published a blog post explaining how Googlebot works as one client of a centralized crawling platform, with new byte-level details.</p>\n<p>The post <a href=\"https://www.searchenginejournal.com/google-explains-googlebot-byte-limits-and-crawling-architecture/570961/\">Google Exp...",
+        "source": "Search Engine Journal",
+        "is_new": true
+    },
+    {
+        "id": "f39a4135-0c7c-4114-aae0-c1ddfb4e7675",
+        "date": "2026-04-03T08:22:48.431504",
+        "title": "Search Live is expanding globally",
+        "status": "Official Announcement",
+        "severity": "Official",
+        "url": "https://blog.google/products-and-platforms/products/search/search-live-global-expansion/",
+        "text": "A graphic with the words Search Live shown underneath a waveform icon. To the right, a phone shows the Google app with Search Live open. The camera is pointing at trees in a forest....",
+        "source": "Google Search Blog",
+        "is_new": true
+    },
+    {
+        "id": "39705745-2cc3-43bc-a732-e651ef775619",
+        "date": "2026-04-03T08:22:49.902358",
+        "title": "Ask a Techspert: How does AI understand my visual searches?",
+        "status": "Official Announcement",
+        "severity": "Official",
+        "url": "https://blog.google/company-news/inside-google/googlers/how-google-ai-visual-search-works/",
+        "text": "Mobile phone with a search bar that says \"Ask anything\"...",
+        "source": "Google Search Blog",
+        "is_new": true
+    },
+    {
+        "id": "37c755be-960d-4acf-99ee-98eb9f75b98d",
+        "date": "2026-04-03T08:22:51.381349",
+        "title": "Use Canvas in AI Mode to get things done and bring your ideas to life, right in Search.",
+        "status": "Official Announcement",
+        "severity": "Official",
+        "url": "https://blog.google/products-and-platforms/products/search/ai-mode-canvas-writing-coding/",
+        "text": "<img src=\"https://storage.googleapis.com/gweb-uniblog-publish-prod/images/AIMMode_Social.max-600x600.format-webp.webp\" />Canvas in AI Mode is now available for everyone in the U.S. Plus, it can now help you draft documents or build interactive tools....",
+        "source": "Google Search Blog",
+        "is_new": true
+    },
+    {
+        "id": "8f670abc-d168-4d0c-9421-a4f52094d20e",
+        "date": "2026-04-03T08:22:52.859743",
+        "title": "See the whole picture and find the look with Circle to Search",
+        "status": "Official Announcement",
+        "severity": "Official",
+        "url": "https://blog.google/products-and-platforms/products/search/circle-to-search-february-2026/",
+        "text": "Google Search interface featuring AI-powered tools including an \"AI Overview\" that breaks down an outfit's components and a virtual \"Try it on\" button that visualizes apparel on diverse body types....",
+        "source": "Google Search Blog",
+        "is_new": true
+    },
+    {
+        "id": "14e73d18-befc-400a-9a86-4aee2789aab9",
+        "date": "2026-04-03T08:22:54.342737",
+        "title": "A simpler way to remove explicit images from Search",
+        "status": "Official Announcement",
+        "severity": "Official",
+        "url": "https://blog.google/products-and-platforms/products/search/remove-explicit-images/",
+        "text": "An illustration showing a magnifying glass searching through blurred, colorful silhouette icons of people, with a prominent Google \"G\" logo and an exclamation mark inside a circular design....",
+        "source": "Google Search Blog",
+        "is_new": true
+    },
+    {
         "id": "03fdd572-b44f-4157-86a7-5e5f8d12cbec",
         "date": "2026-04-03T08:15:39.253876",
         "title": "March 2026 core update",
@@ -31,82 +108,5 @@
         "text": "If we assume a YMYL label, I can&#x27;t guarantee this will fix your problems, but here are a few immediate steps you could take.- Byline your content and include biographical information. &quot;Lilouartz Smith is a supplement researcher in Anywhere, USA, focused on delivering top health-supplement ...",
         "source": "Hacker News",
         "is_new": true
-    },
-    {
-        "id": "d7509a08-c06e-4362-8d42-d7868929d989",
-        "date": "2026-04-03T08:13:24.275267",
-        "title": "March 2026 core update",
-        "status": "SERVICE_INFORMATION",
-        "severity": "LOW",
-        "url": "https://status.search.google.com/incidents/7eTbAa2jWdToLkraZj5y",
-        "text": "Released the March 2026 core update \n\ud83d\udd17 https://developers.google.com/search/updates/core-updates. The rollout may take up to 2 weeks to complete.",
-        "source": "Google Status Dashboard",
-        "is_new": true
-    },
-    {
-        "id": "07ca6d3b-0a8d-4d12-a539-cceb06cb7fed",
-        "date": "2026-04-03T08:13:25.692467",
-        "title": "Google On Why Core Updates Take Weeks To Fully Roll Out",
-        "status": "Community Report",
-        "severity": "Info/Unconfirmed",
-        "url": "https://www.seroundtable.com/google-on-why-core-updates-take-weeks-41133.html",
-        "text": "Google's John Mueller explained, one again, why it takes weeks to roll out a core update.  It is often because there are different components to core updates through the rollout stages, and each needs to be pushed individually....",
-        "source": "Search Engine Roundtable",
-        "is_new": true
-    },
-    {
-        "id": "876bd06e-a563-4252-b1d6-3cbd287f02a1",
-        "date": "2026-04-03T08:13:27.694497",
-        "title": "My side project was annihilated by Google",
-        "status": "SERP Feature Change",
-        "severity": "Info/Unconfirmed",
-        "url": "https://news.ycombinator.com/item?id=47575622",
-        "text": "If we assume a YMYL label, I can&#x27;t guarantee this will fix your problems, but here are a few immediate steps you could take.- Byline your content and include biographical information. &quot;Lilouartz Smith is a supplement researcher in Anywhere, USA, focused on delivering top health-supplement ...",
-        "source": "Hacker News",
-        "is_new": true
-    },
-    {
-        "id": "1",
-        "date": "2026-03-27T08:00:00.000000",
-        "title": "SEOmonitor Case Study Results",
-        "status": "Brand Mention",
-        "severity": "Positive \ud83d\ude0a",
-        "url": "https://reddit.com/r/SEO",
-        "text": "We just migrated our tracking stack. SEOmonitor is fantastic. Highly recommend it to anyone looking for accurate search volume. Love the forecasting tool.",
-        "source": "Reddit (r/SEO)",
-        "is_new": true
-    },
-    {
-        "id": "2",
-        "date": "2026-03-26T12:00:00.000000",
-        "title": "Rankings dropped massively today",
-        "status": "UGC Discussion",
-        "severity": "Info/Unconfirmed",
-        "url": "https://news.ycombinator.com/item?id=123",
-        "text": "Anyone seeing huge volatility today on the Google search algorithm? Our SaaS product traffic plummeted overnight.",
-        "source": "Hacker News",
-        "is_new": true
-    },
-    {
-        "id": "3",
-        "date": "2026-03-25T10:00:00.000000",
-        "title": "Google rolling out local pack changes?",
-        "status": "SERP Feature Change",
-        "severity": "Info/Unconfirmed",
-        "url": "https://reddit.com/r/TechSEO",
-        "text": "The local pack format changed today, and SGE AI Overviews are pushing down all standard rich results. Anyone else tracking this?",
-        "source": "Reddit (r/TechSEO)",
-        "is_new": true
-    },
-    {
-        "id": "4",
-        "date": "2026-03-24T05:00:00.000000",
-        "title": "March Core Update Finished",
-        "status": "AVAILABLE",
-        "severity": "Info",
-        "url": "https://status.search.google.com",
-        "text": "The rollout of the ranking update is now complete.",
-        "source": "Google Status Dashboard",
-        "is_new": false
     }
 ]
