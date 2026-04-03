@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Updates & Sentiment Dashboard</title>
-    <!-- Modern Typography -->
+    <title>Pulse Monitor — SEO Intelligence Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <meta name="description" content="A real-time dashboard for monitoring Google Search updates, SEO community discussions, and SEOmonitor brand mentions.">
+    <meta name="description" content="Real-time dashboard for monitoring Google Search updates, competitor intelligence, SEO community discussions, and brand mentions.">
 </head>
 <body>
     <div class="background-globes">
@@ -23,30 +22,45 @@
             <div>
                 <h1>Pulse <span>Monitor</span></h1>
                 <p>Real-time Google Algorithm & Brand Sentiment Intelligence</p>
+                <p class="last-updated" id="lastUpdated"></p>
             </div>
             <div class="stats-overview">
-                <div class="stat-card">
+                <div class="stat-card" data-filter="all">
                     <span class="stat-label">Total Alerts</span>
-                    <span class="stat-value" id="stat-total">0</span>
+                    <span class="stat-value" id="stat-total" data-target="0">0</span>
                 </div>
-                <div class="stat-card highlight">
+                <div class="stat-card highlight" data-filter="Brand Mention">
                     <span class="stat-label">Brand Mentions</span>
-                    <span class="stat-value" id="stat-mentions">0</span>
+                    <span class="stat-value" id="stat-mentions" data-target="0">0</span>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" data-filter="competitor">
                     <span class="stat-label">Competitor Intel</span>
-                    <span class="stat-value" id="stat-competitors">0</span>
+                    <span class="stat-value" id="stat-competitors" data-target="0">0</span>
                 </div>
             </div>
         </header>
 
-        <section class="filters" aria-label="Alert Filters">
-            <button class="filter-btn active" data-filter="all">All Signals</button>
-            <button class="filter-btn" data-filter="Brand Mention">Brand Mentions</button>
-            <button class="filter-btn" data-filter="algo_chatter">Algo Chatter</button>
-            <button class="filter-btn" data-filter="competitor">Competitor Intel</button>
-            <button class="filter-btn" data-filter="SERP Feature Change">SERP Features</button>
-            <button class="filter-btn" data-filter="official">Official Updates</button>
+        <!-- Search & Controls Bar -->
+        <section class="controls-bar" id="controlsBar">
+            <div class="search-wrapper" id="searchWrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search alerts, sources, competitors..." autocomplete="off">
+                <span class="search-clear hidden" id="searchClear">✕</span>
+                <span class="search-shortcut">ESC</span>
+            </div>
+            <div class="sort-controls">
+                <button class="sort-btn active" data-sort="newest" title="Newest first">↓ Newest</button>
+                <button class="sort-btn" data-sort="oldest" title="Oldest first">↑ Oldest</button>
+            </div>
+        </section>
+
+        <section class="filters" aria-label="Alert Filters" id="filterBar">
+            <button class="filter-btn active" data-filter="all">All Signals <span class="filter-count" id="count-all"></span></button>
+            <button class="filter-btn" data-filter="Brand Mention">Brand Mentions <span class="filter-count" id="count-brand"></span></button>
+            <button class="filter-btn" data-filter="algo_chatter">Algo Chatter <span class="filter-count" id="count-algo"></span></button>
+            <button class="filter-btn" data-filter="competitor">Competitor Intel <span class="filter-count" id="count-comp"></span></button>
+            <button class="filter-btn" data-filter="SERP Feature Change">SERP Features <span class="filter-count" id="count-serp"></span></button>
+            <button class="filter-btn" data-filter="official">Official Updates <span class="filter-count" id="count-official"></span></button>
         </section>
 
         <!-- Monthly Summary Panel -->
@@ -59,7 +73,6 @@
                 <p class="summary-subtitle" id="summarySubtitle">Loading summary...</p>
             </div>
             <div class="summary-body" id="summaryBody">
-                <!-- Row 1: Category Breakdown -->
                 <div class="summary-row">
                     <div class="summary-section breakdown-section">
                         <h3>Category Breakdown</h3>
@@ -77,7 +90,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Row 2: Top Sources + Key Highlights -->
                 <div class="summary-row">
                     <div class="summary-section">
                         <h3>Top Sources</h3>
@@ -91,10 +103,16 @@
             </div>
         </section>
 
+        <!-- Results Count -->
+        <div class="results-bar" id="resultsBar">
+            <span id="resultsCount"></span>
+        </div>
+
         <section class="alerts-grid" id="alertsGrid" aria-live="polite">
-            <!-- Alert Cards rendered dynamically via JS -->
-            <!-- Placeholder loader -->
-            <div class="loading">Loading Intelligence Data...</div>
+            <!-- Skeleton loaders -->
+            <div class="skeleton-card"><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div><div class="skeleton-line w80"></div><div class="skeleton-line w70"></div></div>
+            <div class="skeleton-card"><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div><div class="skeleton-line w80"></div><div class="skeleton-line w70"></div></div>
+            <div class="skeleton-card"><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div><div class="skeleton-line w80"></div><div class="skeleton-line w70"></div></div>
         </section>
     </main>
 
