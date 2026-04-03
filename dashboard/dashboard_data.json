@@ -22,61 +22,6 @@
         "is_new": true
     },
     {
-        "id": "f39a4135-0c7c-4114-aae0-c1ddfb4e7675",
-        "date": "2026-04-03T08:22:48.431504",
-        "title": "Search Live is expanding globally",
-        "status": "Official Announcement",
-        "severity": "Official",
-        "url": "https://blog.google/products-and-platforms/products/search/search-live-global-expansion/",
-        "text": "A graphic with the words Search Live shown underneath a waveform icon. To the right, a phone shows the Google app with Search Live open. The camera is pointing at trees in a forest....",
-        "source": "Google Search Blog",
-        "is_new": true
-    },
-    {
-        "id": "39705745-2cc3-43bc-a732-e651ef775619",
-        "date": "2026-04-03T08:22:49.902358",
-        "title": "Ask a Techspert: How does AI understand my visual searches?",
-        "status": "Official Announcement",
-        "severity": "Official",
-        "url": "https://blog.google/company-news/inside-google/googlers/how-google-ai-visual-search-works/",
-        "text": "Mobile phone with a search bar that says \"Ask anything\"...",
-        "source": "Google Search Blog",
-        "is_new": true
-    },
-    {
-        "id": "37c755be-960d-4acf-99ee-98eb9f75b98d",
-        "date": "2026-04-03T08:22:51.381349",
-        "title": "Use Canvas in AI Mode to get things done and bring your ideas to life, right in Search.",
-        "status": "Official Announcement",
-        "severity": "Official",
-        "url": "https://blog.google/products-and-platforms/products/search/ai-mode-canvas-writing-coding/",
-        "text": "<img src=\"https://storage.googleapis.com/gweb-uniblog-publish-prod/images/AIMMode_Social.max-600x600.format-webp.webp\" />Canvas in AI Mode is now available for everyone in the U.S. Plus, it can now help you draft documents or build interactive tools....",
-        "source": "Google Search Blog",
-        "is_new": true
-    },
-    {
-        "id": "8f670abc-d168-4d0c-9421-a4f52094d20e",
-        "date": "2026-04-03T08:22:52.859743",
-        "title": "See the whole picture and find the look with Circle to Search",
-        "status": "Official Announcement",
-        "severity": "Official",
-        "url": "https://blog.google/products-and-platforms/products/search/circle-to-search-february-2026/",
-        "text": "Google Search interface featuring AI-powered tools including an \"AI Overview\" that breaks down an outfit's components and a virtual \"Try it on\" button that visualizes apparel on diverse body types....",
-        "source": "Google Search Blog",
-        "is_new": true
-    },
-    {
-        "id": "14e73d18-befc-400a-9a86-4aee2789aab9",
-        "date": "2026-04-03T08:22:54.342737",
-        "title": "A simpler way to remove explicit images from Search",
-        "status": "Official Announcement",
-        "severity": "Official",
-        "url": "https://blog.google/products-and-platforms/products/search/remove-explicit-images/",
-        "text": "An illustration showing a magnifying glass searching through blurred, colorful silhouette icons of people, with a prominent Google \"G\" logo and an exclamation mark inside a circular design....",
-        "source": "Google Search Blog",
-        "is_new": true
-    },
-    {
         "id": "03fdd572-b44f-4157-86a7-5e5f8d12cbec",
         "date": "2026-04-03T08:15:39.253876",
         "title": "March 2026 core update",
