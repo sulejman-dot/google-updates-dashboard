@@ -1,46 +1,79 @@
 [
-  {
-    "id": "1",
-    "date": "2026-03-27T08:00:00.000000",
-    "title": "SEOmonitor Case Study Results",
-    "status": "Brand Mention",
-    "severity": "Positive \ud83d\ude0a",
-    "url": "https://reddit.com/r/SEO",
-    "text": "We just migrated our tracking stack. SEOmonitor is fantastic. Highly recommend it to anyone looking for accurate search volume. Love the forecasting tool.",
-    "source": "Reddit (r/SEO)",
-    "is_new": true
-  },
-  {
-    "id": "2",
-    "date": "2026-03-26T12:00:00.000000",
-    "title": "Rankings dropped massively today",
-    "status": "UGC Discussion",
-    "severity": "Info/Unconfirmed",
-    "url": "https://news.ycombinator.com/item?id=123",
-    "text": "Anyone seeing huge volatility today on the Google search algorithm? Our SaaS product traffic plummeted overnight.",
-    "source": "Hacker News",
-    "is_new": true
-  },
-  {
-    "id": "3",
-    "date": "2026-03-25T10:00:00.000000",
-    "title": "Google rolling out local pack changes?",
-    "status": "SERP Feature Change",
-    "severity": "Info/Unconfirmed",
-    "url": "https://reddit.com/r/TechSEO",
-    "text": "The local pack format changed today, and SGE AI Overviews are pushing down all standard rich results. Anyone else tracking this?",
-    "source": "Reddit (r/TechSEO)",
-    "is_new": true
-  },
-  {
-    "id": "4",
-    "date": "2026-03-24T05:00:00.000000",
-    "title": "March Core Update Finished",
-    "status": "AVAILABLE",
-    "severity": "Info",
-    "url": "https://status.search.google.com",
-    "text": "The rollout of the ranking update is now complete.",
-    "source": "Google Status Dashboard",
-    "is_new": false
-  }
+    {
+        "id": "d7509a08-c06e-4362-8d42-d7868929d989",
+        "date": "2026-04-03T08:13:24.275267",
+        "title": "March 2026 core update",
+        "status": "SERVICE_INFORMATION",
+        "severity": "LOW",
+        "url": "https://status.search.google.com/incidents/7eTbAa2jWdToLkraZj5y",
+        "text": "Released the March 2026 core update \n\ud83d\udd17 https://developers.google.com/search/updates/core-updates. The rollout may take up to 2 weeks to complete.",
+        "source": "Google Status Dashboard",
+        "is_new": true
+    },
+    {
+        "id": "07ca6d3b-0a8d-4d12-a539-cceb06cb7fed",
+        "date": "2026-04-03T08:13:25.692467",
+        "title": "Google On Why Core Updates Take Weeks To Fully Roll Out",
+        "status": "Community Report",
+        "severity": "Info/Unconfirmed",
+        "url": "https://www.seroundtable.com/google-on-why-core-updates-take-weeks-41133.html",
+        "text": "Google's John Mueller explained, one again, why it takes weeks to roll out a core update.  It is often because there are different components to core updates through the rollout stages, and each needs to be pushed individually....",
+        "source": "Search Engine Roundtable",
+        "is_new": true
+    },
+    {
+        "id": "876bd06e-a563-4252-b1d6-3cbd287f02a1",
+        "date": "2026-04-03T08:13:27.694497",
+        "title": "My side project was annihilated by Google",
+        "status": "SERP Feature Change",
+        "severity": "Info/Unconfirmed",
+        "url": "https://news.ycombinator.com/item?id=47575622",
+        "text": "If we assume a YMYL label, I can&#x27;t guarantee this will fix your problems, but here are a few immediate steps you could take.- Byline your content and include biographical information. &quot;Lilouartz Smith is a supplement researcher in Anywhere, USA, focused on delivering top health-supplement ...",
+        "source": "Hacker News",
+        "is_new": true
+    },
+    {
+        "id": "1",
+        "date": "2026-03-27T08:00:00.000000",
+        "title": "SEOmonitor Case Study Results",
+        "status": "Brand Mention",
+        "severity": "Positive \ud83d\ude0a",
+        "url": "https://reddit.com/r/SEO",
+        "text": "We just migrated our tracking stack. SEOmonitor is fantastic. Highly recommend it to anyone looking for accurate search volume. Love the forecasting tool.",
+        "source": "Reddit (r/SEO)",
+        "is_new": true
+    },
+    {
+        "id": "2",
+        "date": "2026-03-26T12:00:00.000000",
+        "title": "Rankings dropped massively today",
+        "status": "UGC Discussion",
+        "severity": "Info/Unconfirmed",
+        "url": "https://news.ycombinator.com/item?id=123",
+        "text": "Anyone seeing huge volatility today on the Google search algorithm? Our SaaS product traffic plummeted overnight.",
+        "source": "Hacker News",
+        "is_new": true
+    },
+    {
+        "id": "3",
+        "date": "2026-03-25T10:00:00.000000",
+        "title": "Google rolling out local pack changes?",
+        "status": "SERP Feature Change",
+        "severity": "Info/Unconfirmed",
+        "url": "https://reddit.com/r/TechSEO",
+        "text": "The local pack format changed today, and SGE AI Overviews are pushing down all standard rich results. Anyone else tracking this?",
+        "source": "Reddit (r/TechSEO)",
+        "is_new": true
+    },
+    {
+        "id": "4",
+        "date": "2026-03-24T05:00:00.000000",
+        "title": "March Core Update Finished",
+        "status": "AVAILABLE",
+        "severity": "Info",
+        "url": "https://status.search.google.com",
+        "text": "The rollout of the ranking update is now complete.",
+        "source": "Google Status Dashboard",
+        "is_new": false
+    }
 ]
