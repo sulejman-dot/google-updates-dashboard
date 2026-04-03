@@ -49,6 +49,48 @@
             <button class="filter-btn" data-filter="official">Official Updates</button>
         </section>
 
+        <!-- Monthly Summary Panel -->
+        <section class="monthly-summary" id="monthlySummary">
+            <div class="summary-header" id="summaryToggle">
+                <div class="summary-title-row">
+                    <h2 class="summary-title">📊 <span id="summaryMonthLabel">Monthly</span> Summary</h2>
+                    <span class="summary-toggle-icon" id="toggleIcon">▼</span>
+                </div>
+                <p class="summary-subtitle" id="summarySubtitle">Loading summary...</p>
+            </div>
+            <div class="summary-body" id="summaryBody">
+                <!-- Row 1: Category Breakdown -->
+                <div class="summary-row">
+                    <div class="summary-section breakdown-section">
+                        <h3>Category Breakdown</h3>
+                        <div id="categoryBreakdown" class="breakdown-bars"></div>
+                    </div>
+                    <div class="summary-section highlight-section">
+                        <h3>🤖 AI/LLM Tracker</h3>
+                        <div class="ai-tracker">
+                            <div class="ai-stat-big" id="aiCount">0</div>
+                            <div class="ai-stat-label">AI/LLM flagged updates</div>
+                            <div class="ai-pct-bar">
+                                <div class="ai-pct-fill" id="aiPctFill"></div>
+                            </div>
+                            <div class="ai-stat-sub" id="aiPctText">0% of all signals</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Row 2: Top Sources + Key Highlights -->
+                <div class="summary-row">
+                    <div class="summary-section">
+                        <h3>Top Sources</h3>
+                        <div id="topSources" class="top-sources-list"></div>
+                    </div>
+                    <div class="summary-section">
+                        <h3>Key Highlights</h3>
+                        <div id="keyHighlights" class="highlights-list"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="alerts-grid" id="alertsGrid" aria-live="polite">
             <!-- Alert Cards rendered dynamically via JS -->
             <!-- Placeholder loader -->
