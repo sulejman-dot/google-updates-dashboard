@@ -875,11 +875,10 @@ def check_competitor_blogs(state):
     
     # Keywords that signal a product update (not just content marketing)
     product_keywords = [
-        'new feature', 'product update', 'release', 'changelog', 'launch',
+        'new feature', 'product update', 'release note', 'changelog', 'launch',
         'announcing', 'introducing', 'now available', 'just launched',
-        'update:', 'what\'s new', 'beta', 'integration', 'api',
-        'rank track', 'serp', 'keyword', 'backlink', 'audit',
-        'dashboard', 'report', 'tool', 'platform'
+        'update:', 'what\'s new', 'beta release', 'new integration',
+        'new api', 'we\'ve added', 'we\'re launching'
     ]
     
     for competitor_name, feed_url in COMPETITOR_FEEDS.items():
@@ -903,12 +902,14 @@ def check_competitor_blogs(state):
             
             combined_text = f"{title} {summary}".lower()
             
-            # Must be a product-related post (not pure content marketing)
-            if not any(kw in combined_text for kw in product_keywords):
+            # Determine if AI/LLM related (always pass through)
+            ai_flag = is_ai_related(combined_text)
+            
+            # Must be either: AI/LLM related OR a product announcement
+            is_product_update = any(kw in combined_text for kw in product_keywords)
+            if not ai_flag and not is_product_update:
                 continue
             
-            # Determine if AI/LLM related
-            ai_flag = is_ai_related(combined_text)
             severity = "🤖 AI/LLM" if ai_flag else "Product Update"
             
             label = f"{'🤖 ' if ai_flag else ''}{competitor_name}"
