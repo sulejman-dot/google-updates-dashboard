@@ -1,5 +1,38 @@
 [
     {
+        "id": "03fdd572-b44f-4157-86a7-5e5f8d12cbec",
+        "date": "2026-04-03T08:15:39.253876",
+        "title": "March 2026 core update",
+        "status": "SERVICE_INFORMATION",
+        "severity": "LOW",
+        "url": "https://status.search.google.com/incidents/7eTbAa2jWdToLkraZj5y",
+        "text": "Released the March 2026 core update \n\ud83d\udd17 https://developers.google.com/search/updates/core-updates. The rollout may take up to 2 weeks to complete.",
+        "source": "Google Status Dashboard",
+        "is_new": true
+    },
+    {
+        "id": "2f27b52b-cb66-430e-b010-975fcb454d89",
+        "date": "2026-04-03T08:15:41.801455",
+        "title": "Google On Why Core Updates Take Weeks To Fully Roll Out",
+        "status": "Community Report",
+        "severity": "Info/Unconfirmed",
+        "url": "https://www.seroundtable.com/google-on-why-core-updates-take-weeks-41133.html",
+        "text": "Google's John Mueller explained, one again, why it takes weeks to roll out a core update.  It is often because there are different components to core updates through the rollout stages, and each needs to be pushed individually....",
+        "source": "Search Engine Roundtable",
+        "is_new": true
+    },
+    {
+        "id": "e5c7e953-8427-47c9-9a4a-93ba80afa2b0",
+        "date": "2026-04-03T08:15:45.013026",
+        "title": "My side project was annihilated by Google",
+        "status": "SERP Feature Change",
+        "severity": "Info/Unconfirmed",
+        "url": "https://news.ycombinator.com/item?id=47575622",
+        "text": "If we assume a YMYL label, I can&#x27;t guarantee this will fix your problems, but here are a few immediate steps you could take.- Byline your content and include biographical information. &quot;Lilouartz Smith is a supplement researcher in Anywhere, USA, focused on delivering top health-supplement ...",
+        "source": "Hacker News",
+        "is_new": true
+    },
+    {
         "id": "d7509a08-c06e-4362-8d42-d7868929d989",
         "date": "2026-04-03T08:13:24.275267",
         "title": "March 2026 core update",
