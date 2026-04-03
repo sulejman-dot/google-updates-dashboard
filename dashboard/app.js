@@ -227,9 +227,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // ─── Filter Buttons ─────────────────────────────────────
     filterBtns.forEach(btn => {
         btn.addEventListener("click", (e) => {
+            const clicked = e.currentTarget;
             filterBtns.forEach(b => b.classList.remove("active"));
-            e.target.classList.add("active");
-            currentFilter = e.target.dataset.filter;
+            clicked.classList.add("active");
+            currentFilter = clicked.dataset.filter;
             applyAll();
         });
     });
