@@ -100,6 +100,25 @@
                         <div id="keyHighlights" class="highlights-list"></div>
                     </div>
                 </div>
+
+                <!-- Sparkline Row -->
+                <div class="summary-row sparkline-row">
+                    <div class="summary-section sparkline-section">
+                        <div class="sparkline-header">
+                            <h3>📈 Signal Frequency</h3>
+                            <div class="sparkline-toggle">
+                                <button class="spark-toggle-btn active" data-range="7">7d</button>
+                                <button class="spark-toggle-btn" data-range="30">30d</button>
+                            </div>
+                        </div>
+                        <div class="sparkline-main-wrap">
+                            <svg id="sparklineMain" class="sparkline-svg" viewBox="0 0 420 60" preserveAspectRatio="none"></svg>
+                            <div id="sparklineTooltip" class="sparkline-tooltip hidden"></div>
+                        </div>
+                        <div id="sparklineXAxis" class="sparkline-x-axis"></div>
+                        <div class="sparkline-categories" id="sparklineCategories"></div>
+                    </div>
+                </div>
             </div>
         </section>
 

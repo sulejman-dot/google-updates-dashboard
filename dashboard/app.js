@@ -470,6 +470,169 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('lastUpdated').textContent = `Last updated: ${formatDate(latest.date)}`;
     };
 
+    // ─── Sparklines ─────────────────────────────────────────
+    let sparklineData = [];
+    let sparklineRange = 7;
+
+    const SPARK_CATEGORIES = [
+        { key: 'competitor', label: 'Competitor', color: '#E67E22', match: d => d.status === 'Competitor Update' },
+        { key: 'brand',      label: 'Brand',      color: '#36a64f', match: d => d.status === 'Brand Mention' },
+        { key: 'algo',       label: 'Algo',        color: '#1E90FF', match: d => ALGO_STATUSES.includes(d.status) },
+        { key: 'serp',       label: 'SERP',        color: '#8A2BE2', match: d => d.status === 'SERP Feature Change' },
+    ];
+
+    const buildDateMap = (data, days) => {
+        const map = {};
+        const now = new Date();
+        for (let i = days - 1; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(d.getDate() - i);
+            map[d.toISOString().slice(0, 10)] = 0;
+        }
+        data.forEach(alert => {
+            const day = alert.date.slice(0, 10);
+            if (day in map) map[day]++;
+        });
+        return map;
+    };
+
+    const buildCatDateMap = (data, days, matchFn) => {
+        const map = {};
+        const now = new Date();
+        for (let i = days - 1; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(d.getDate() - i);
+            map[d.toISOString().slice(0, 10)] = 0;
+        }
+        data.filter(matchFn).forEach(alert => {
+            const day = alert.date.slice(0, 10);
+            if (day in map) map[day]++;
+        });
+        return map;
+    };
+
+    const renderMainSparkline = (data, days) => {
+        const svg = document.getElementById('sparklineMain');
+        const tooltip = document.getElementById('sparklineTooltip');
+        const xAxis = document.getElementById('sparklineXAxis');
+        svg.innerHTML = '';
+
+        const dateMap = buildDateMap(data, days);
+        const dates = Object.keys(dateMap);
+        const values = Object.values(dateMap);
+        const maxVal = Math.max(...values, 1);
+        const W = 420, H = 60, PAD = 4;
+        const stepX = (W - PAD * 2) / Math.max(dates.length - 1, 1);
+        const pts = values.map((v, i) => ({
+            x: PAD + i * stepX, y: PAD + (1 - v / maxVal) * (H - PAD * 2), v, date: dates[i]
+        }));
+
+        // Gradient
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        defs.innerHTML = `<linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#BB86FC" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#BB86FC" stop-opacity="0.02"/>
+        </linearGradient>`;
+        svg.appendChild(defs);
+
+        // Area fill
+        const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        area.setAttribute('d', `M${pts[0].x},${H} ${pts.map(p=>`L${p.x},${p.y}`).join(' ')} L${pts[pts.length-1].x},${H} Z`);
+        area.setAttribute('fill', 'url(#sparkGrad)');
+        svg.appendChild(area);
+
+        // Line
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        line.setAttribute('d', pts.map((p,i) => `${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '));
+        line.setAttribute('fill', 'none');
+        line.setAttribute('stroke', '#BB86FC');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke-linecap', 'round');
+        line.setAttribute('stroke-linejoin', 'round');
+        svg.appendChild(line);
+
+        // Dots + hover zones
+        pts.forEach(p => {
+            const zone = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            zone.setAttribute('x', p.x - stepX / 2); zone.setAttribute('y', 0);
+            zone.setAttribute('width', stepX); zone.setAttribute('height', H);
+            zone.setAttribute('fill', 'transparent'); zone.style.cursor = 'crosshair';
+            zone.addEventListener('mouseenter', () => {
+                const label = new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                tooltip.textContent = `${label}: ${p.v} signal${p.v !== 1 ? 's' : ''}`;
+                tooltip.classList.remove('hidden');
+                const rect = svg.getBoundingClientRect();
+                const pxX = (p.x / W) * rect.width;
+                tooltip.style.left = Math.min(pxX + 8, rect.width - 110) + 'px';
+                tooltip.style.top = '4px';
+            });
+            zone.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
+            svg.appendChild(zone);
+
+            if (p.v > 0) {
+                const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                dot.setAttribute('cx', p.x.toFixed(1)); dot.setAttribute('cy', p.y.toFixed(1));
+                dot.setAttribute('r', '3'); dot.setAttribute('fill', '#BB86FC');
+                dot.setAttribute('stroke', '#1a1a2e'); dot.setAttribute('stroke-width', '1.5');
+                svg.appendChild(dot);
+            }
+        });
+
+        // X-axis labels
+        xAxis.innerHTML = '';
+        const labelStep = Math.max(1, Math.floor(dates.length / 5));
+        dates.forEach((date, i) => {
+            if (i % labelStep !== 0 && i !== dates.length - 1) return;
+            const label = document.createElement('span');
+            label.className = 'sparkline-x-label';
+            label.textContent = new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            label.style.left = ((PAD + i * stepX) / W * 100) + '%';
+            xAxis.appendChild(label);
+        });
+    };
+
+    const renderCategorySparklines = (data, days) => {
+        const container = document.getElementById('sparklineCategories');
+        container.innerHTML = '';
+        SPARK_CATEGORIES.forEach(cat => {
+            const dateMap = buildCatDateMap(data, days, cat.match);
+            const values = Object.values(dateMap);
+            const total = values.reduce((a, b) => a + b, 0);
+            if (total === 0) return;
+            const maxVal = Math.max(...values, 1);
+            const W = 120, H = 28, PAD = 2;
+            const stepX = (W - PAD * 2) / Math.max(values.length - 1, 1);
+            const pts = values.map((v, i) => ({
+                x: PAD + i * stepX, y: PAD + (1 - v / maxVal) * (H - PAD * 2)
+            }));
+            const linePath = pts.map((p,i) => `${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+            const wrap = document.createElement('div');
+            wrap.className = 'spark-cat-item';
+            wrap.innerHTML = `
+                <div class="spark-cat-label" style="color:${cat.color}">${cat.label}</div>
+                <svg class="spark-cat-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+                    <path d="${linePath}" fill="none" stroke="${cat.color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+                </svg>
+                <div class="spark-cat-count" style="color:${cat.color}">${total}</div>`;
+            container.appendChild(wrap);
+        });
+    };
+
+    const buildSparklines = (data) => {
+        sparklineData = data;
+        renderMainSparkline(data, sparklineRange);
+        renderCategorySparklines(data, sparklineRange);
+        document.querySelectorAll('.spark-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.spark-toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                sparklineRange = parseInt(btn.dataset.range);
+                renderMainSparkline(sparklineData, sparklineRange);
+                renderCategorySparklines(sparklineData, sparklineRange);
+            });
+        });
+    };
+
     // ─── Fetch Data ─────────────────────────────────────────
     fetch('dashboard_data.json')
         .then(response => {
@@ -481,6 +644,7 @@ document.addEventListener("DOMContentLoaded", () => {
             updateStats(data);
             updateFilterCounts(data);
             buildMonthlySummary(data);
+            buildSparklines(data);
             setLastUpdated(data);
             applyAll();
         })
@@ -495,3 +659,4 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error(error);
         });
 });
+
