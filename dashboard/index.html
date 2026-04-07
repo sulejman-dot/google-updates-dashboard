@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js" defer></script>
     <meta name="description" content="Real-time dashboard for monitoring Google Search updates, competitor intelligence, SEO community discussions, and brand mentions.">
 </head>
 <body>
@@ -68,7 +70,19 @@
             <div class="summary-header" id="summaryToggle">
                 <div class="summary-title-row">
                     <h2 class="summary-title">📊 <span id="summaryMonthLabel">Monthly</span> Summary</h2>
-                    <span class="summary-toggle-icon" id="toggleIcon">▼</span>
+                    <div class="summary-actions">
+                        <div class="export-buttons" id="exportButtons">
+                            <button class="export-btn" id="exportCsvBtn" title="Download CSV report">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                CSV
+                            </button>
+                            <button class="export-btn export-pdf" id="exportPdfBtn" title="Download PDF report">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+                                PDF
+                            </button>
+                        </div>
+                        <span class="summary-toggle-icon" id="toggleIcon">▼</span>
+                    </div>
                 </div>
                 <p class="summary-subtitle" id="summarySubtitle">Loading summary...</p>
             </div>

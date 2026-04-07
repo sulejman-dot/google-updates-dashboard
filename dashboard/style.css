@@ -974,6 +974,136 @@ mark.search-hl {
     text-align: right;
 }
 
+/* ─── Export Buttons ──────────────────────────────────────── */
+.summary-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    padding: 0.35rem 0.85rem;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+}
+
+.export-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(30, 144, 255, 0.15), rgba(138, 43, 226, 0.15));
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    border-radius: inherit;
+}
+
+.export-btn:hover {
+    color: var(--text-main);
+    border-color: rgba(30, 144, 255, 0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(30, 144, 255, 0.12);
+}
+
+.export-btn:hover::before {
+    opacity: 1;
+}
+
+.export-btn:active {
+    transform: translateY(0);
+}
+
+.export-btn svg {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.export-btn.export-pdf {
+    border-color: rgba(138, 43, 226, 0.2);
+}
+
+.export-btn.export-pdf:hover {
+    border-color: rgba(138, 43, 226, 0.4);
+    box-shadow: 0 4px 16px rgba(138, 43, 226, 0.12);
+}
+
+.export-btn.exporting {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.export-btn.exporting::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 2px solid transparent;
+    border-top-color: var(--accent-blue);
+    border-radius: 50%;
+    animation: export-spin 0.7s linear infinite;
+    right: 10px;
+}
+
+@keyframes export-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Toast notification for export success */
+.export-toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: rgba(22, 23, 31, 0.92);
+    border: 1px solid rgba(54, 166, 79, 0.4);
+    color: var(--accent-green);
+    padding: 0.8rem 1.4rem;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    animation: toast-in 0.4s ease forwards;
+}
+
+.export-toast.toast-out {
+    animation: toast-out 0.3s ease forwards;
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toast-out {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(10px) scale(0.95); }
+}
+
 @media (max-width: 768px) {
     .dashboard-header { flex-direction: column; align-items: flex-start; }
     .stats-overview { width: 100%; }
@@ -988,11 +1118,14 @@ mark.search-hl {
     .filter-btn { font-size: 0.82rem; padding: 0.45rem 0.9rem; }
     .sparkline-categories { gap: 0.6rem; }
     .spark-cat-item { min-width: 120px; }
+    .export-buttons { gap: 0.3rem; }
+    .export-btn { padding: 0.3rem 0.65rem; font-size: 0.72rem; }
 }
 
 @media (max-width: 480px) {
     .dashboard-container { padding: 1.5rem 1rem; }
     .stat-card { min-width: auto; padding: 0.8rem 1rem; }
     .stat-value { font-size: 1.5rem; }
+    .export-toast { left: 1rem; right: 1rem; bottom: 1rem; }
 }
 

@@ -633,6 +633,382 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // ─── Export Helpers ───────────────────────────────────────
+    const showToast = (message) => {
+        const existing = document.querySelector('.export-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'export-toast';
+        toast.innerHTML = `✅ ${message}`;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('toast-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    };
+
+    const getMonthData = (data) => {
+        const now = new Date();
+        return data.filter(d => {
+            const dd = new Date(d.date);
+            return dd.getMonth() === now.getMonth() && dd.getFullYear() === now.getFullYear();
+        });
+    };
+
+    const getMonthLabel = () => {
+        const now = new Date();
+        const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        return `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+    };
+
+    const categorize = (alert) => {
+        if (alert.status === 'Competitor Update') return 'Competitor Intel';
+        if (alert.status === 'Brand Mention') return 'Brand Mention';
+        if (alert.status === 'SERP Feature Change') return 'SERP Feature';
+        if (['SERVICE_INFORMATION','AVAILABLE','RESOLVED'].some(s => (alert.status || '').includes(s))) return 'Official Update';
+        return 'Community & Algo';
+    };
+
+    // ─── CSV Export ──────────────────────────────────────────
+    const exportCSV = (data) => {
+        const monthData = getMonthData(data);
+        const monthLabel = getMonthLabel();
+
+        const headers = ['Date', 'Category', 'Status', 'Title', 'Source', 'Severity', 'URL'];
+        const rows = monthData
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .map(d => [
+                new Date(d.date).toISOString().slice(0, 16).replace('T', ' '),
+                categorize(d),
+                d.status || '',
+                (d.title || '').replace(/"/g, '""'),
+                d.source || '',
+                (d.severity || '').replace(/"/g, '""'),
+                d.url || ''
+            ]);
+
+        const csvContent = [
+            `"Pulse Monitor — ${monthLabel} Intelligence Report"`,
+            `"Generated: ${new Date().toLocaleString()}"`,
+            `"Total Signals: ${monthData.length}"`,
+            '',
+            headers.map(h => `"${h}"`).join(','),
+            ...rows.map(r => r.map(cell => `"${cell}"`).join(','))
+        ].join('\n');
+
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `pulse-monitor-${monthLabel.replace(' ', '-').toLowerCase()}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        showToast(`CSV report downloaded — ${monthData.length} signals`);
+    };
+
+    // ─── PDF Export ──────────────────────────────────────────
+    const exportPDF = (data) => {
+        if (typeof window.jspdf === 'undefined') {
+            showToast('⚠️ PDF library still loading, try again in a moment');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const monthData = getMonthData(data);
+        const monthLabel = getMonthLabel();
+        const pageW = doc.internal.pageSize.getWidth();
+        const margin = 18;
+        let y = margin;
+
+        // ── Color palette
+        const darkBg = [10, 10, 15];
+        const cardBg = [22, 23, 31];
+        const accent = [138, 43, 226];
+        const accentBlue = [30, 144, 255];
+        const white = [255, 255, 255];
+        const muted = [155, 161, 166];
+        const green = [54, 166, 79];
+
+        // ── Background
+        doc.setFillColor(...darkBg);
+        doc.rect(0, 0, pageW, doc.internal.pageSize.getHeight(), 'F');
+
+        // ── Header gradient bar
+        doc.setFillColor(...accent);
+        doc.rect(0, 0, pageW, 3, 'F');
+
+        // ── Title
+        y = 18;
+        doc.setTextColor(...white);
+        doc.setFontSize(26);
+        doc.setFont(undefined, 'bold');
+        doc.text('Pulse Monitor', margin, y);
+        y += 9;
+        doc.setFontSize(13);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(...accentBlue);
+        doc.text(`${monthLabel} Intelligence Report`, margin, y);
+        y += 7;
+        doc.setFontSize(8);
+        doc.setTextColor(...muted);
+        doc.text(`Generated: ${new Date().toLocaleString()} • ${monthData.length} signals tracked`, margin, y);
+        y += 12;
+
+        // ── Executive Summary Box
+        doc.setFillColor(...cardBg);
+        doc.roundedRect(margin, y, pageW - margin * 2, 30, 3, 3, 'F');
+
+        const catCounts = {};
+        monthData.forEach(d => {
+            const cat = categorize(d);
+            catCounts[cat] = (catCounts[cat] || 0) + 1;
+        });
+
+        const aiCount = monthData.filter(d => {
+            const sev = (d.severity || '').toLowerCase();
+            return sev.includes('ai') || sev.includes('🤖') || sev.includes('llm');
+        }).length;
+
+        const summaryY = y + 6;
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...accent);
+        doc.text('EXECUTIVE SUMMARY', margin + 6, summaryY);
+
+        doc.setFontSize(8.5);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(...white);
+        const summaryStats = [
+            `Total Signals: ${monthData.length}`,
+            `AI/LLM Flagged: ${aiCount}`,
+            `Competitor Intel: ${catCounts['Competitor Intel'] || 0}`,
+            `Brand Mentions: ${catCounts['Brand Mention'] || 0}`,
+            `SERP Features: ${catCounts['SERP Feature'] || 0}`,
+            `Official Updates: ${catCounts['Official Update'] || 0}`
+        ];
+
+        const colW = (pageW - margin * 2 - 12) / 3;
+        summaryStats.forEach((stat, i) => {
+            const col = i % 3;
+            const row = Math.floor(i / 3);
+            doc.text(stat, margin + 6 + col * colW, summaryY + 8 + row * 7);
+        });
+
+        y += 36;
+
+        // ── Category Breakdown Mini Table
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...accent);
+        doc.text('CATEGORY BREAKDOWN', margin, y);
+        y += 3;
+
+        const catColors = {
+            'Competitor Intel': [230, 126, 34],
+            'Community & Algo': [30, 144, 255],
+            'Brand Mention': [54, 166, 79],
+            'Official Update': [255, 69, 0],
+            'SERP Feature': [138, 43, 226]
+        };
+
+        const catRows = Object.entries(catCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([cat, count]) => {
+                const pct = monthData.length > 0 ? Math.round(count / monthData.length * 100) : 0;
+                return [cat, String(count), `${pct}%`];
+            });
+
+        doc.autoTable({
+            startY: y,
+            head: [['Category', 'Count', '% of Total']],
+            body: catRows,
+            margin: { left: margin, right: margin },
+            styles: {
+                fillColor: cardBg,
+                textColor: white,
+                fontSize: 8,
+                cellPadding: 3,
+                lineColor: [40, 41, 50],
+                lineWidth: 0.3,
+                font: 'helvetica'
+            },
+            headStyles: {
+                fillColor: [30, 30, 45],
+                textColor: accentBlue,
+                fontStyle: 'bold',
+                fontSize: 7.5,
+                cellPadding: 3
+            },
+            alternateRowStyles: {
+                fillColor: [18, 18, 28]
+            },
+            columnStyles: {
+                0: { cellWidth: 60 },
+                1: { cellWidth: 25, halign: 'center' },
+                2: { cellWidth: 25, halign: 'center' }
+            },
+            tableWidth: pageW - margin * 2,
+            theme: 'grid'
+        });
+
+        y = doc.lastAutoTable.finalY + 8;
+
+        // ── Top Sources
+        const sourceCounts = {};
+        monthData.forEach(d => { sourceCounts[d.source || 'Unknown'] = (sourceCounts[d.source || 'Unknown'] || 0) + 1; });
+        const topSources = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...accent);
+        doc.text('TOP SOURCES', margin, y);
+        y += 3;
+
+        doc.autoTable({
+            startY: y,
+            head: [['Source', 'Signals']],
+            body: topSources.map(([src, count]) => [src, String(count)]),
+            margin: { left: margin, right: margin },
+            styles: {
+                fillColor: cardBg,
+                textColor: white,
+                fontSize: 8,
+                cellPadding: 3,
+                lineColor: [40, 41, 50],
+                lineWidth: 0.3
+            },
+            headStyles: {
+                fillColor: [30, 30, 45],
+                textColor: accentBlue,
+                fontStyle: 'bold',
+                fontSize: 7.5
+            },
+            alternateRowStyles: {
+                fillColor: [18, 18, 28]
+            },
+            columnStyles: {
+                0: { cellWidth: 110 },
+                1: { cellWidth: 30, halign: 'center' }
+            },
+            tableWidth: pageW - margin * 2,
+            theme: 'grid'
+        });
+
+        y = doc.lastAutoTable.finalY + 8;
+
+        // ── Detailed Signals Table
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...accent);
+        doc.text('ALL SIGNALS', margin, y);
+        y += 3;
+
+        const signalRows = monthData
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .map(d => [
+                new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                categorize(d),
+                (d.title || '').slice(0, 70) + ((d.title || '').length > 70 ? '…' : ''),
+                d.source || ''
+            ]);
+
+        doc.autoTable({
+            startY: y,
+            head: [['Date', 'Category', 'Title', 'Source']],
+            body: signalRows,
+            margin: { left: margin, right: margin },
+            styles: {
+                fillColor: cardBg,
+                textColor: white,
+                fontSize: 7,
+                cellPadding: 2.5,
+                lineColor: [40, 41, 50],
+                lineWidth: 0.2,
+                overflow: 'linebreak'
+            },
+            headStyles: {
+                fillColor: [30, 30, 45],
+                textColor: accentBlue,
+                fontStyle: 'bold',
+                fontSize: 7
+            },
+            alternateRowStyles: {
+                fillColor: [18, 18, 28]
+            },
+            columnStyles: {
+                0: { cellWidth: 22 },
+                1: { cellWidth: 30 },
+                2: { cellWidth: 90 },
+                3: { cellWidth: 32 }
+            },
+            tableWidth: pageW - margin * 2,
+            theme: 'grid',
+            didDrawPage: (data) => {
+                // Redraw dark background on new pages
+                doc.setFillColor(...darkBg);
+                doc.rect(0, 0, pageW, doc.internal.pageSize.getHeight(), 'FD');
+                // Re-draw the table content will appear on top via jsPDF internals
+            },
+            willDrawPage: (data) => {
+                doc.setFillColor(...darkBg);
+                doc.rect(0, 0, pageW, doc.internal.pageSize.getHeight(), 'F');
+            }
+        });
+
+        // ── Footer on every page
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(7);
+            doc.setTextColor(...muted);
+            doc.text(
+                `Pulse Monitor • ${monthLabel} Report • Page ${i} of ${totalPages}`,
+                pageW / 2, doc.internal.pageSize.getHeight() - 8,
+                { align: 'center' }
+            );
+        }
+
+        doc.save(`pulse-monitor-${monthLabel.replace(' ', '-').toLowerCase()}.pdf`);
+        showToast(`PDF report downloaded — ${monthData.length} signals`);
+    };
+
+    // ─── Export Button Handlers ──────────────────────────────
+    const csvBtn = document.getElementById('exportCsvBtn');
+    const pdfBtn = document.getElementById('exportPdfBtn');
+
+    if (csvBtn) {
+        csvBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            csvBtn.classList.add('exporting');
+            setTimeout(() => {
+                exportCSV(allData);
+                csvBtn.classList.remove('exporting');
+            }, 200);
+        });
+    }
+
+    if (pdfBtn) {
+        pdfBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pdfBtn.classList.add('exporting');
+            setTimeout(() => {
+                exportPDF(allData);
+                pdfBtn.classList.remove('exporting');
+            }, 300);
+        });
+    }
+
+    // Prevent export buttons from toggling the summary panel
+    const exportBtnsContainer = document.getElementById('exportButtons');
+    if (exportBtnsContainer) {
+        exportBtnsContainer.addEventListener('click', (e) => e.stopPropagation());
+    }
+
     // ─── Fetch Data ─────────────────────────────────────────
     fetch('dashboard_data.json')
         .then(response => {
