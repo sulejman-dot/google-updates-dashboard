@@ -1,5 +1,148 @@
 [
     {
+        "id": "7f1354d8-eee2-4793-ae31-cab8677e8429",
+        "date": "2026-04-09T18:15:08.284559",
+        "title": "Google's March 2026 Broad Core Update Has Completed Rolling Out",
+        "status": "Community Report",
+        "severity": "Info/Unconfirmed",
+        "url": "https://www.seroundtable.com/google-march-2026-core-update-complete-41145.html",
+        "text": "Google's March 2026 broad core update has officially completed rolling out. Google announced this via X this morning and the Search Status Dashboard has been updated to document the rollout. The update took 12 days and 4 hours to complete......",
+        "source": "Search Engine Roundtable",
+        "is_new": true
+    },
+    {
+        "id": "8a776583-b823-4462-a830-c662ecd3bac1",
+        "date": "2026-04-09T18:15:10.851318",
+        "title": "Google Confirms March 2026 Core Update Is Complete via @sejournal, @MattGSouthern",
+        "status": "Community Report",
+        "severity": "Info/Unconfirmed",
+        "url": "https://www.searchenginejournal.com/google-confirms-march-2026-core-update-is-complete/571459/",
+        "text": "<p>Google's March core update finished rolling out. Here's what to know about the rollout and when to check your data. </p>\n<p>The post <a href=\"https://www.searchenginejournal.com/google-confirms-march-2026-core-update-is-complete/571459/\">Google Confirms March 2026 Core Update Is Complete</a> appe...",
+        "source": "Search Engine Journal",
+        "is_new": true
+    },
+    {
+        "id": "1cbea49d-c657-4d1e-bef2-e8074cff496a",
+        "date": "2026-04-09T18:15:14.721730",
+        "title": "Would an SEO MCP server actually be useful, or am I solving a problem nobody has?",
+        "status": "SERP Feature Change",
+        "severity": "Info/Unconfirmed",
+        "url": "https://www.reddit.com/r/SEO/comments/1sgr64p/would_an_seo_mcp_server_actually_be_useful_or_am/",
+        "text": "I run a small SEO monitoring tool and I'm thinking about building an MCP server (the protocol Claude/Cursor/etc use to talk to external tools) so people can just ask their AI assistant stuff like \"audit my site,\" \"why did my rankings drop,\" \"fix the schema on this page\" \u2014 and the agent actually does...",
+        "source": "Reddit (r/SEO)",
+        "is_new": true
+    },
+    {
+        "id": "dc7a864a-0974-45e5-a79a-8ba19e92aa60",
+        "date": "2026-04-09T18:15:16.209484",
+        "title": "How Accurate Are Google\u2019s A.I. Overviews? [NY Times looks into AIOs and Grounding]",
+        "status": "SERP Feature Change",
+        "severity": "Info/Unconfirmed",
+        "url": "https://www.reddit.com/r/SEO/comments/1sgnyw4/how_accurate_are_googles_ai_overviews_ny_times/",
+        "text": "Late last year, Stephen Punwasi was getting ready for dinner when he noticed a news story saying that the wife of the wrestler Hulk Hogan might sue over his death.\n\nMr. Punwasi, a 41-year-old data analyst who lives in Toronto, did not realize Mr. Hogan had died and asked Google when that had happene...",
+        "source": "Reddit (r/SEO)",
+        "is_new": true
+    },
+    {
+        "id": "b5068278-c5e5-4eaf-ad2d-fcacfb008c81",
+        "date": "2026-04-09T18:15:17.698157",
+        "title": "Need help/advice?",
+        "status": "SERP Feature Change",
+        "severity": "Info/Unconfirmed",
+        "url": "https://www.reddit.com/r/SEO/comments/1sgnm5a/need_helpadvice/",
+        "text": "My site ranks well for the main keywords. I had a peak in traffic in January, but since mid February clicks have been going down. March organic traffic was at an all time low for the last 2 years. I manually searched the top keywords and my site appears first for many, the problem is that now you ha...",
+        "source": "Reddit (r/SEO)",
+        "is_new": true
+    },
+    {
+        "id": "d3efe9a8-7945-416c-a8ca-0c1534947a13",
+        "date": "2026-04-09T18:15:24.188479",
+        "title": "[SEMrush] Agentic search: How AI agents will decide which brands get found",
+        "status": "Competitor Update",
+        "severity": "\ud83e\udd16 AI/LLM",
+        "url": "https://www.semrush.com/blog/what-is-agentic-search/",
+        "text": "<p>Agentic search is AI that evaluates and acts on behalf of users. Learn how it works and what it means for your brand visibility.</p>...",
+        "source": "SEMrush",
+        "is_new": true
+    },
+    {
+        "id": "1261a860-8138-490f-89c6-39b2ee93aa47",
+        "date": "2026-04-09T18:15:25.659460",
+        "title": "[SEMrush] ChatGPT traffic analysis: Insights from 17 months of clickstream data",
+        "status": "Competitor Update",
+        "severity": "\ud83e\udd16 AI/LLM",
+        "url": "https://www.semrush.com/blog/chatgpt-search-insights/",
+        "text": "<p><img alt=\"ChatGPT traffic analysis: Insights from 17 months of clickstream data\" src=\"https://static.semrush.com/blog/uploads/media/fb/0e/fb0e29ad761b962308e6c437dc172873/69f18b893547a752623b14c896b15c01/investigating-chatgpt-search-insights-from-80-million-clickstream-records.svg\" width=\"448\" />...",
+        "source": "SEMrush",
+        "is_new": true
+    },
+    {
+        "id": "50f76065-d602-44dc-be54-17fbf9effdf7",
+        "date": "2026-04-09T18:15:28.206800",
+        "title": "[Sistrix] Stay Visible April 2026 \u2013 Gemini, Search, Unity?",
+        "status": "Competitor Update",
+        "severity": "\ud83e\udd16 AI/LLM",
+        "url": "https://www.sistrix.com/blog/stay-visible-april-2026-unified-input-box/",
+        "text": "<p>This month you&#8217;ll learn from the head of search at Google that there are key differences between Google Search and Gemini teams, and that they don&#8217;t really have a plan for merging the various search-like tools. I highlight March Core Update data, give you a demo of the new SISTRIX for...",
+        "source": "Sistrix",
+        "is_new": true
+    },
+    {
+        "id": "535836ed-50e4-4116-b31e-a1a091a830c3",
+        "date": "2026-04-09T18:15:32.686476",
+        "title": "[Rank Ranger] Wolf Treasures Slot: Quick Wins & Wild Adventures",
+        "status": "Competitor Update",
+        "severity": "\ud83d\ude80 Feature Launch",
+        "url": "https://www.rankranger.com/wolf-treasures-slot-quick-wins-wild-adventures/",
+        "text": "<p>Ever wanted a burst of excitement that fits into the gap between coffee breaks or a quick scroll on your phone? Wolf Treasures delivers that adrenaline\u2011filled experience on a sleek 5\u2011reel layout that spins faster than a sprinting wolf.</p>\n<p>Visit <a href=\"https://wolftreasuresplay-au.com/en-au/...",
+        "source": "Rank Ranger",
+        "is_new": true
+    },
+    {
+        "id": "9704f8c8-d1f9-4523-b508-a2d09ef19b0a",
+        "date": "2026-04-09T18:15:34.149489",
+        "title": "[Rank Ranger] Book of Dead Slot Review: Avventura Quick\u2011Hit per Giocatori Rapidi",
+        "status": "Competitor Update",
+        "severity": "\ud83e\udd16 AI/LLM",
+        "url": "https://www.rankranger.com/book-of-dead-slot-review-avventura-quickhit-per-gi/",
+        "text": "<h2>Introduzione \u2013 Prendi la Tua Attrezzatura e Gira Velocemente</h2>\n<p><a href=\"https://bookofdeadofficial.it/it-it/\">Book of Dead</a> \u00e8 la slot preferita dai giocatori che amano un brivido che accelera il cuore. Il gioco ti invita a seguire Rich\u202fWilde in un rush di mistero dell&#8217;antico Egitt...",
+        "source": "Rank Ranger",
+        "is_new": true
+    },
+    {
+        "id": "ee092e7c-85bc-4a58-9822-4a51569448c2",
+        "date": "2026-04-09T18:16:06.673426",
+        "title": "[Semrush] What is the best alternative for Semrush in the AI citation/answers?",
+        "status": "Competitor Update",
+        "severity": "\ud83e\udd16 AI/LLM",
+        "url": "https://www.reddit.com/r/localseo/comments/1sgpef2/what_is_the_best_alternative_for_semrush_in_the/",
+        "text": "Hi all- I have been paying for Semrush for a while but it's gotten pretty bloated and looks like it meant for large agencies than business owners like me. Especially since people are moving to finding answers from ChatGPT etc and since AEO is getting more and more important, what is the best alterna",
+        "source": "Reddit (r/localseo)",
+        "is_new": true
+    },
+    {
+        "id": "94d3461e-02a5-4143-92a1-2d154bb4e4d8",
+        "date": "2026-04-09T18:16:08.257355",
+        "title": "[Semrush] What I learned testing cheap SEO tools in 2025 without using Ahrefs or Semrush",
+        "status": "Competitor Update",
+        "severity": "Product Discussion",
+        "url": "https://www.reddit.com/r/SEOZilla/comments/1sgtxj6/what_i_learned_testing_cheap_seo_tools_in_2025/",
+        "text": "I\u2019ve spent the last year testing lower-cost SEO tools while building SEOZilla.ai, mostly because I didn\u2019t want to default to the usual expensive stack and pretend that was the only way to get results. The most surprising takeaway was that cheap SEO in 2025 isn\u2019t about cutting corners anymore, it\u2019s a",
+        "source": "Reddit (r/SEOZilla)",
+        "is_new": true
+    },
+    {
+        "id": "25e6b22b-af04-48b7-b8d6-57d9e0264f63",
+        "date": "2026-04-09T18:16:09.746856",
+        "title": "[Semrush] How I actually use Semrush to decide what to optimize",
+        "status": "Competitor Update",
+        "severity": "Product Discussion",
+        "url": "https://www.reddit.com/r/digital_marketing/comments/1sgrtr0/how_i_actually_use_semrush_to_decide_what_to/",
+        "text": "I\u2019ve been using Semrush across multiple sites. I rely on a few features to guide what actually needs to be optimized or fixed.\n\nFor me, it usually starts with Site Audit. This gives a quick snapshot of technical issues like crawlability, broken links, duplicate content, missing meta data, and even t",
+        "source": "Reddit (r/digital_marketing)",
+        "is_new": true
+    },
+    {
         "id": "039cf095-7ae3-4414-ae7a-34121c7e7639",
         "date": "2026-04-06T15:53:40.724724",
         "title": "[Semrush] Why Free Annual Reports Beat Paid SEO Tools for 2026 Hidden Keyword Strategy",
