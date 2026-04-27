@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guru Token Extractor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0d0f18;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: #161927;
+      border: 1px solid #2a2f45;
+      border-radius: 16px;
+      padding: 2.5rem;
+      max-width: 720px;
+      width: 100%;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.8rem;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a5b4fc, #e879f9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      background: #0d0f18;
+      border: 1px solid #2a2f45;
+      border-radius: 10px;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      padding: 1rem;
+      resize: vertical;
+      min-height: 120px;
+      outline: none;
+      transition: border-color 0.2s;
+      line-height: 1.6;
+    }
+
+    textarea:focus { border-color: #6366f1; }
+    textarea::placeholder { color: #3a4060; }
+
+    .btn {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.85rem;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .result {
+      margin-top: 1.8rem;
+      display: none;
+    }
+
+    .token-box {
+      background: #0a0c14;
+      border: 1px solid #1e3a5f;
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: #38bdf8;
+      word-break: break-all;
+      line-height: 1.7;
+      position: relative;
+    }
+
+    .copy-btn {
+      margin-top: 0.8rem;
+      padding: 0.6rem 1.2rem;
+      background: #1e3a5f;
+      color: #38bdf8;
+      border: 1px solid #2563eb;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .copy-btn:hover { background: #1e4080; }
+
+    .save-btn {
+      margin-top: 0.8rem;
+      margin-left: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      background: #14532d;
+      color: #4ade80;
+      border: 1px solid #16a34a;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .save-btn:hover { background: #166534; }
+
+    .error {
+      margin-top: 1rem;
+      padding: 0.8rem 1rem;
+      background: #2d1515;
+      border: 1px solid #7f1d1d;
+      border-radius: 8px;
+      color: #f87171;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .step {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+      font-size: 0.82rem;
+      color: #94a3b8;
+    }
+
+    .step-num {
+      background: #2a2f45;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #a5b4fc;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .instructions {
+      background: #1a1f35;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .success-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #14532d;
+      color: #4ade80;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">🔑</div>
+      <div>
+        <h1>Guru Token Extractor</h1>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <div class="step"><div class="step-num">1</div><span>Open DevTools → Network tab → find any request to <code>api.getguru.com</code></span></div>
+      <div class="step"><div class="step-num">2</div><span>Right-click the request → <strong>Copy → Copy as cURL</strong></span></div>
+      <div class="step"><div class="step-num">3</div><span>Paste it below and click Extract</span></div>
+    </div>
+
+    <label>Paste cURL command here</label>
+    <textarea id="curlInput" placeholder="curl 'https://api.getguru.com/...' -H 'Authorization: Basic xxxx...' ..."></textarea>
+
+    <button class="btn" onclick="extract()">⚡ Extract Token</button>
+
+    <div class="error" id="errorBox"></div>
+
+    <div class="result" id="resultBox">
+      <label style="margin-top:0; margin-bottom: 0.8rem; display:block;">Extracted Authorization Token</label>
+      <div class="success-badge">✓ Token found</div>
+      <div class="token-box" id="tokenValue"></div>
+      <button class="copy-btn" onclick="copyToken()">📋 Copy Token</button>
+      <button class="save-btn" onclick="saveToken()">💾 Download as guru_token.txt</button>
+    </div>
+  </div>
+
+  <script>
+    let extractedToken = '';
+
+    function extract() {
+      const curl = document.getElementById('curlInput').value.trim();
+      const errorBox = document.getElementById('errorBox');
+      const resultBox = document.getElementById('resultBox');
+
+      errorBox.style.display = 'none';
+      resultBox.style.display = 'none';
+
+      if (!curl) {
+        showError('Please paste a cURL command first.');
+        return;
+      }
+
+      // Try to match Authorization header
+      const match = curl.match(/-H\s+['"]Authorization:\s*([^'"]+)['"]/i)
+                 || curl.match(/--header\s+['"]Authorization:\s*([^'"]+)['"]/i);
+
+      if (!match) {
+        showError('Could not find an Authorization header in the pasted cURL. Make sure you copied "Copy as cURL" correctly.');
+        return;
+      }
+
+      extractedToken = match[1].trim();
+      document.getElementById('tokenValue').textContent = extractedToken;
+      resultBox.style.display = 'block';
+    }
+
+    function showError(msg) {
+      const errorBox = document.getElementById('errorBox');
+      errorBox.textContent = '⚠️ ' + msg;
+      errorBox.style.display = 'block';
+    }
+
+    function copyToken() {
+      navigator.clipboard.writeText(extractedToken).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy Token', 2000);
+      });
+    }
+
+    function saveToken() {
+      const blob = new Blob([extractedToken], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'guru_token.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

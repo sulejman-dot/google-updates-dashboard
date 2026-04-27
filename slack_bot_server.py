@@ -12,6 +12,8 @@ from slack_sdk import WebClient
 from dotenv import load_dotenv
 import re
 import subprocess
+import hmac
+import hashlib
 
 load_dotenv()
 
@@ -32,12 +34,54 @@ def strip_html(text):
     return re.sub(clean, '', text)
 
 app = Flask(__name__)
-SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN") or "xoxb-4173116321-10452138701364-22v7lSrQNCFqFe6lX8g0aCXM"
+SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
+if not SLACK_BOT_TOKEN:
+    raise RuntimeError("SLACK_BOT_TOKEN not set in environment — refusing to start")
+
+# Slack request signature verification.
+# If SLACK_SIGNING_SECRET is unset (Mac dev behind ngrok), verification is SKIPPED with a warning.
+# Once set (cloud deployment), every /slack/* request is verified.
+SLACK_SIGNING_SECRET = os.environ.get("SLACK_SIGNING_SECRET")
+if not SLACK_SIGNING_SECRET:
+    print("⚠️  SLACK_SIGNING_SECRET not set — request signature verification DISABLED. Do not expose publicly.")
+
+def _verify_slack_signature():
+    """Return True iff the request carries a valid X-Slack-Signature."""
+    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
+    signature = request.headers.get("X-Slack-Signature", "")
+    if not timestamp or not signature:
+        return False
+    try:
+        if abs(time.time() - int(timestamp)) > 60 * 5:
+            return False  # replay-protection window
+    except ValueError:
+        return False
+    body = request.get_data(as_text=True)
+    basestring = f"v0:{timestamp}:{body}"
+    expected = "v0=" + hmac.new(
+        SLACK_SIGNING_SECRET.encode(),
+        basestring.encode(),
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature)
 INTERCOM_API_TOKEN = os.getenv("INTERCOM_API_TOKEN")
 slack_client = WebClient(token=SLACK_BOT_TOKEN)
 
-SPREADSHEET_ID = "161qbyJ5nQsgDEaudZ5O1C4zldUIBbeDiYMYyCgldG40"
-SERVICE_ACCOUNT_FILE = "service_account.json" 
+@app.before_request
+def _enforce_slack_signature():
+    """Reject un-signed requests on /slack/* endpoints when SLACK_SIGNING_SECRET is configured."""
+    if not SLACK_SIGNING_SECRET:
+        return None  # dev mode: no-op
+    if not request.path.startswith("/slack/"):
+        return None  # health, clickup webhook, etc. use other auth
+    if request.path == "/slack/ping":
+        return None  # uptime monitor
+    if not _verify_slack_signature():
+        return jsonify({"error": "invalid_slack_signature"}), 403
+    return None
+
+SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID", "161qbyJ5nQsgDEaudZ5O1C4zldUIBbeDiYMYyCgldG40")
+SERVICE_ACCOUNT_FILE = os.environ.get("SERVICE_ACCOUNT_FILE", "service_account.json")
 
 def get_real_clickup_tasks():
     """
@@ -1720,8 +1764,18 @@ def slack_command():
             response_text = "I didn't understand that command."
             attachments = []
 
+            # Guard: skip posting if response_url is invalid (internal/startup triggers)
+            def safe_respond(payload):
+                if not response_url or response_url in ("none", "skip", "internal") or not response_url.startswith("http"):
+                    print(f"[{datetime.now().isoformat()}] ⏭️ Skipping response_url post (invalid URL: {response_url!r})")
+                    return
+                try:
+                    req.post(response_url, json=payload, timeout=10)
+                except Exception as post_err:
+                    print(f"[{datetime.now().isoformat()}] ⚠️ safe_respond failed: {post_err}")
+
             if "hello" in command:
-                req.post(response_url, json={"text": f"Hello, <@{user}>! I am your ClickUp Guardian. 🤖", "response_type": "in_channel"})
+                safe_respond({"text": f"Hello, <@{user}>! 👋 I am your ClickUp Guardian. 🤖\n\nAvailable commands:\n• `/check-tasks` — Open ClickUp tasks\n• `/clickup-comments` — Today's comments\n• `/wbr` — Weekly business review\n• `/analyze <url>` — Article analysis\n• `/curl <url>` — Page SEO audit", "response_type": "in_channel"})
                 return
 
             elif "clickup-comments" in command:
@@ -1732,14 +1786,14 @@ def slack_command():
                     from clickup_comments_cache_manager import get_todays_comments, load_cache, MONITORED_TASKS
                     
                     # Send immediate acknowledgment
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "ephemeral",
                         "text": "🔍 Fetching today's ClickUp comments..."
                     })
                     
                     cache = load_cache()
                     if not cache:
-                        req.post(response_url, json={
+                        safe_respond({
                             "response_type": "ephemeral",
                             "text": "❌ No comment cache found. Cache needs to be refreshed."
                         })
@@ -1754,7 +1808,7 @@ def slack_command():
                     total_comments = sum(len(t["comments"]) for t in todays_comments.values())
                     
                     if total_comments == 0:
-                        req.post(response_url, json={
+                        safe_respond({
                             "response_type": "ephemeral",
                             "text": f"📋 *ClickUp Daily Summary — {date_str}*\n\n✅ No comments on your tasks today. You're all caught up!\n\n_Scanned {tasks_scanned} open tasks | Cache updated: {last_updated}_"
                         })
@@ -1787,7 +1841,7 @@ def slack_command():
                         f"_Scanned {tasks_scanned} tasks | Cache: {last_updated}_"
                     )
                     
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "ephemeral",
                         "text": header_text,
                         "attachments": attachments
@@ -1798,7 +1852,7 @@ def slack_command():
                     error_msg = f"❌ Error checking comments: {str(e)}"
                     print(error_msg)
                     print(traceback.format_exc())
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "ephemeral",
                         "text": error_msg
                     })
@@ -1814,7 +1868,7 @@ def slack_command():
             #         from intercom_response_monitor import process_conversations, load_state
             #         
             #         # Send immediate acknowledgment
-            #         req.post(response_url, json={
+            #         safe_respond({
             #             "response_type": "ephemeral",
             #             "text": "🔍 Checking Intercom for slow responses..."
             #         })
@@ -1830,7 +1884,7 @@ def slack_command():
             #         # 3. Call process_conversations() with the data
             #         
             #         # For now, send a helpful response
-            #         req.post(response_url, json={
+            #         safe_respond({
             #             "response_type": "ephemeral",
             #             "text": "🤖 Intercom alert check initiated. The system will check all open conversations and alert if any have been waiting 10+ minutes for a team reply."
             #         })
@@ -1840,7 +1894,7 @@ def slack_command():
             #         error_msg = f"❌ Error checking Intercom: {str(e)}"
             #         print(error_msg)
             #         print(traceback.format_exc())
-            #         req.post(response_url, json={
+            #         safe_respond({
             #             "response_type": "ephemeral",
             #             "text": error_msg
             #         })
@@ -1851,7 +1905,7 @@ def slack_command():
                 try:
                     parts = text.split()
                     if len(parts) < 1 or not text.strip():
-                        req.post(response_url, json={
+                        safe_respond({
                             "response_type": "ephemeral",
                             "text": "❌ Please provide a URL: `/analyze https://example.com/article`"
                         })
@@ -1861,7 +1915,7 @@ def slack_command():
                     print(f"[ANALYZE] Starting analysis for: {url}", flush=True)
 
                     # Send immediate acknowledgment
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "ephemeral",
                         "text": f"🔍 Analyzing article: {url}\n⏳ This takes 15-30 seconds (fetching page + searching competitors)..."
                     })
@@ -1870,7 +1924,7 @@ def slack_command():
                     analysis = analyze_article(url)
 
                     if 'error' in analysis:
-                        req.post(response_url, json={
+                        safe_respond({
                             "response_type": "ephemeral",
                             "text": f"❌ {analysis['error']}"
                         })
@@ -1995,7 +2049,7 @@ def slack_command():
                         msg += f"  • {rec}\n"
 
                     # Send results
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "in_channel",
                         "text": msg
                     })
@@ -2005,7 +2059,7 @@ def slack_command():
                     error_msg = f"❌ Error with /analyze: {str(e)}"
                     print(error_msg, flush=True)
                     print(traceback.format_exc(), flush=True)
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "ephemeral",
                         "text": error_msg
                     })
@@ -2022,7 +2076,7 @@ def slack_command():
                         url = clean_slack_url(parts[0])
                         
                         # Send immediate acknowledgment
-                        req.post(response_url, json={
+                        safe_respond({
                             "response_type": "ephemeral",
                             "text": f"🔍 Analyzing {url}..."
                         })
@@ -2031,7 +2085,7 @@ def slack_command():
                         analysis = analyze_page(url)
                         
                         if "error" in analysis:
-                            req.post(response_url, json={
+                            safe_respond({
                                 "response_type": "ephemeral",
                                 "text": f"❌ Error analyzing {analysis.get('url', url)}: {analysis['error']}"
                             })
@@ -2090,7 +2144,7 @@ def slack_command():
                                 msg += f"• {item}\n"
                         
                         # Send final results
-                        req.post(response_url, json={
+                        safe_respond({
                             "response_type": "in_channel",
                             "text": msg
                         })
@@ -2125,7 +2179,7 @@ def slack_command():
                     error_msg = f"❌ Error with /curl: {str(e)}"
                     print(error_msg)
                     print(traceback.format_exc())
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "ephemeral",
                         "text": error_msg
                     })
@@ -2142,7 +2196,7 @@ def slack_command():
                         url = clean_slack_url(parts[0])
                         print(f"[AUDIT DEBUG] Raw text={repr(text)}, parts[0]={repr(parts[0])}, cleaned url={repr(url)}", flush=True)
                         # Send immediate acknowledgment
-                        req.post(response_url, json={
+                        safe_respond({
                             "response_type": "ephemeral",
                             "text": f"📋 Running content audit on {url}..."
                         })
@@ -2151,7 +2205,7 @@ def slack_command():
                         audit = content_audit(url)
                         
                         if 'error' in audit:
-                            req.post(response_url, json={
+                            safe_respond({
                                 "response_type": "ephemeral",
                                 "text": f"❌ {audit['error']}"
                             })
@@ -2278,7 +2332,7 @@ def slack_command():
                         msg += f"*🚦 Content Audit Score: {score}/100 {score_label}*\n"
                         
                         # Send the results
-                        req.post(response_url, json={
+                        safe_respond({
                             "response_type": "in_channel",
                             "text": msg
                         })
@@ -2288,7 +2342,7 @@ def slack_command():
                     error_msg = f"❌ Error with /audit: {str(e)}"
                     print(error_msg)
                     print(traceback.format_exc())
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "ephemeral",
                         "text": error_msg
                     })
@@ -2302,7 +2356,7 @@ def slack_command():
                     print("🔍 Checking ClickUp comments...")
                     
                     # Send immediate acknowledgment
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "ephemeral",
                         "text": "🔍 Scanning open ClickUp tasks for new comments..."
                     })
@@ -2312,7 +2366,7 @@ def slack_command():
                     tasks_result = mcp_clickup_search({"keywords": "sulejman"})
                     
                     if not tasks_result:
-                        req.post(response_url, json={
+                        safe_respond({
                             "response_type": "ephemeral",
                             "text": "❌ Failed to fetch  tasks from ClickUp"
                         })
@@ -2339,7 +2393,7 @@ def slack_command():
                     result_icon = "✅" if alerts_sent == 0 else "🔔"
                     result_msg = f"{result_icon} Scan complete: {alerts_sent} new comment(s) found"
                     
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "ephemeral",
                         "text": result_msg
                     })
@@ -2348,7 +2402,7 @@ def slack_command():
                     error_msg = f"❌ Error checking comments: {str(e)}"
                     print(error_msg)
                     print(traceback.format_exc())
-                    req.post(response_url, json={
+                    safe_respond({
                         "response_type": "ephemeral",
                         "text": error_msg
                     })
@@ -2657,7 +2711,7 @@ else:
                     except ValueError:
                         pass
                 
-                req.post(response_url, json={
+                safe_respond({
                     "response_type": "ephemeral",
                     "text": f"📡 Fetching product updates from the last {lookup_days} days..."
                 })
@@ -2863,14 +2917,96 @@ else:
                     return
                 except Exception as e:
                     print(f"❌ Error opening modal: {e}")
-                    req.post(response_url, json={" text": f"Error opening modal: {str(e)}"})
+                    safe_respond({" text": f"Error opening modal: {str(e)}"})
                     return
+
+            elif "kb-approve" in command or "kb-reject" in command or "kb-followup" in command:
+                # ── KNOWLEDGE BASE CARD REVIEW ──────────────────────────────
+                # Usage: /kb-approve <filename>  or  /kb-reject <filename>  or  /kb-followup <filename>
+                WORKSPACE_DIR = os.path.dirname(__file__)
+                PENDING_DIR = os.path.join(WORKSPACE_DIR, "guru_cards", "pending_review")
+                KB_FILE = os.path.join(WORKSPACE_DIR, "guru_customer_success_knowledge_base.md")
+
+                filename = text.strip()
+                if not filename:
+                    safe_respond({"response_type": "ephemeral", "text": "❌ Please provide a filename.\nUsage: `/kb-approve 20260422_my_card.md`"})
+                    return
+
+                # Sanitize: strip path traversal attempts
+                filename = os.path.basename(filename)
+                pending_path = os.path.join(PENDING_DIR, filename)
+
+                if not os.path.exists(pending_path):
+                    # List what's available
+                    try:
+                        available = [f for f in os.listdir(PENDING_DIR) if f.endswith('.md')]
+                    except FileNotFoundError:
+                        available = []
+                    files_list = "\n".join(f"  • `{f}`" for f in available) or "  _No cards pending_"
+                    safe_respond({
+                        "response_type": "ephemeral",
+                        "text": f"❌ File not found in pending review: `{filename}`\n\n*Currently pending:*\n{files_list}"
+                    })
+                    return
+
+                if "kb-reject" in command:
+                    os.remove(pending_path)
+                    safe_respond({
+                        "response_type": "ephemeral",
+                        "text": f"🗑️ Card rejected and deleted: `{filename}`"
+                    })
+                    print(f"[KB] Rejected card: {filename}")
+                    return
+
+                if "kb-followup" in command:
+                    # Move to followup/ directory — thread needs a proper answer first
+                    followup_dir = os.path.join(WORKSPACE_DIR, "guru_cards", "followup")
+                    os.makedirs(followup_dir, exist_ok=True)
+                    os.rename(pending_path, os.path.join(followup_dir, filename))
+                    safe_respond({
+                        "response_type": "ephemeral",
+                        "text": (
+                            f"⚠️ *Card marked for follow-up: `{filename}`*\n"
+                            f"The thread needs a definitive answer before this can become a KB card.\n"
+                            f"Moved to `guru_cards/followup/` — will be re-checked on the next scan."
+                        )
+                    })
+                    print(f"[KB] Followup needed: {filename} → moved to followup/")
+                    return
+
+                # ── APPROVE: append to knowledge base ──
+                with open(pending_path, 'r') as f:
+                    card_content = f.read()
+
+                # Append to KB with a separator
+                separator = "\n\n---\n\n"
+                with open(KB_FILE, 'a') as kb:
+                    kb.write(separator + card_content)
+
+                # Move approved file out of pending into approved/ archive
+                approved_dir = os.path.join(WORKSPACE_DIR, "guru_cards", "approved")
+                os.makedirs(approved_dir, exist_ok=True)
+                os.rename(pending_path, os.path.join(approved_dir, filename))
+
+                # Extract title from first line
+                first_line = card_content.strip().split('\n')[0].lstrip('#').strip()
+
+                safe_respond({
+                    "response_type": "ephemeral",
+                    "text": (
+                        f"✅ *Card approved and added to the Knowledge Base!*\n"
+                        f"*Title:* {first_line}\n"
+                        f"*File:* `{filename}`\n"
+                        f"The card has been appended to `guru_customer_success_knowledge_base.md`."
+                    )
+                })
+                print(f"[KB] Approved card: {filename} → appended to KB")
 
             else:
                 response_text = f"I received: `{command}`. Try `/check-tasks` or `/check-invoices`."
 
             # Send delayed response using response_url
-            req.post(response_url, json={
+            safe_respond({
                 "response_type": "in_channel",
                 "text": response_text,
                 "attachments": attachments
@@ -2879,7 +3015,7 @@ else:
             error_details = traceback.format_exc()
             print(f"❌ Error in process_command: {e}\n{error_details}")
             try:
-                req.post(response_url, json={
+                safe_respond({
                     "response_type": "ephemeral",
                     "text": f"⚠️ *Internal Error:* Something went wrong while processing `{command}`.\n```{str(e)}```"
                 })
@@ -2895,6 +3031,74 @@ def slack_interactive():
     if not raw_payload:
         return jsonify({"text": "No payload received"}), 200
     payload = json.loads(raw_payload)
+
+    # ── KB REVIEW BUTTONS (block_actions) ──────────────────────────
+    if payload.get('type') == 'block_actions':
+        action = payload['actions'][0]
+        action_id = action['action_id']
+
+        if action_id in ('kb_approve', 'kb_reject', 'kb_followup'):
+            filename = action['value']
+            user_id = payload['user']['id']
+            channel_id = payload['channel']['id']
+            message_ts = payload['message']['ts']
+
+            WORKSPACE_DIR = os.path.dirname(__file__)
+            PENDING_DIR = os.path.join(WORKSPACE_DIR, "guru_cards", "pending_review")
+            KB_FILE = os.path.join(WORKSPACE_DIR, "guru_customer_success_knowledge_base.md")
+            pending_path = os.path.join(PENDING_DIR, filename)
+
+            if not os.path.exists(pending_path):
+                slack_client.chat_postMessage(
+                    channel=channel_id,
+                    text=f"❌ File not found: `{filename}` — it may have already been processed."
+                )
+                return jsonify({"ok": True}), 200
+
+            if action_id == 'kb_approve':
+                with open(pending_path, 'r') as f:
+                    card_content = f.read()
+                separator = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                with open(KB_FILE, 'a') as kb:
+                    kb.write(separator + card_content)
+                approved_dir = os.path.join(WORKSPACE_DIR, "guru_cards", "approved")
+                os.makedirs(approved_dir, exist_ok=True)
+                os.rename(pending_path, os.path.join(approved_dir, filename))
+                first_line = card_content.strip().split('\n')[0].lstrip('#').strip()
+                result_text = f"✅ *Card approved by <@{user_id}>!*\n*Title:* {first_line}\nAdded to the Knowledge Base."
+                print(f"[KB] Approved card via button: {filename}")
+
+            elif action_id == 'kb_reject':
+                os.remove(pending_path)
+                result_text = f"🗑️ *Card rejected by <@{user_id}>.*\nFile `{filename}` deleted."
+                print(f"[KB] Rejected card via button: {filename}")
+
+            elif action_id == 'kb_followup':
+                followup_dir = os.path.join(WORKSPACE_DIR, "guru_cards", "followup")
+                os.makedirs(followup_dir, exist_ok=True)
+                os.rename(pending_path, os.path.join(followup_dir, filename))
+                result_text = f"⚠️ *Card marked for follow-up by <@{user_id}>.*\nThread needs a definitive answer first."
+                print(f"[KB] Followup via button: {filename}")
+
+            # Update the original message to show the result
+            try:
+                slack_client.chat_update(
+                    channel=channel_id,
+                    ts=message_ts,
+                    text=result_text,
+                    blocks=[
+                        {
+                            "type": "section",
+                            "text": {"type": "mrkdwn", "text": result_text}
+                        }
+                    ]
+                )
+            except Exception as e:
+                slack_client.chat_postMessage(channel=channel_id, text=result_text)
+                print(f"  ⚠️ Could not update message: {e}")
+
+            return jsonify({"ok": True}), 200
+
     if payload['type'] == 'view_submission' and payload['view']['callback_id'] == 'api_test_modal':
         values = payload['view']['state']['values']
         endpoint = values['endpoint_block']['endpoint_select']['selected_option']['value']

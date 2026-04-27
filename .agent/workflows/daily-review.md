@@ -83,6 +83,9 @@ Be specific about what you counted:
 
 ---
 
+### New Step: Scan for Second Brain Journals
+Before writing PM content, scan `/Users/user/Library/CloudStorage/GoogleDrive-sulejman@seomonitor.com/My Drive/cosmin folder/Shared Context/AI Automation/Daily Checkins/YYYY-MM-DD/` for files matching `Sulejman_*.md` (excluding the check-in file `Sulejman_YYYY-MM-DD.md`). Extract use case categories and time saved from each journal found.
+
 ## Step 7: Save
 
 Update `Collected Context/Daily Checkins/YYYY-MM/YYYY-MM-DD.md`:
@@ -109,6 +112,24 @@ Update `Collected Context/Daily Checkins/YYYY-MM/YYYY-MM-DD.md`:
 ### Tomorrow's #1 Priority
 [What must get done tomorrow]
 ```
+
+### New Step: Update Shared Copy (PM)
+- Read the existing AM file at `/Users/user/Library/CloudStorage/GoogleDrive-sulejman@seomonitor.com/My Drive/cosmin folder/Shared Context/AI Automation/Daily Checkins/YYYY-MM-DD/Sulejman_YYYY-MM-DD.md`
+- Append the PM section at the bottom WITHOUT modifying the AM content
+- The PM section MUST include: What Was Delivered, **Time Saved** (total hours + breakdown by task), AI Sessions table (if journals found), and Day Score
+- If no AM file exists (morning was skipped), create the file with just the PM section
+
+### New Step: Update TODAY.md (PM)
+- Change my PM column from ⏳ to ✅ HH:MM
+- Extend the Summary with PM highlights AND include **time saved** (e.g. "~4h saved via AI")
+
+### New Step: Append PM to Weekly Digest
+- Find today's date section and my AM entry
+- Append below it: `**Sulejman — PM:** [1-2 sentence summary]`
+
+### New Step: Append PM to JSONL
+- Same as AM but with `"type":"PM"` and additional fields: `sessions_total`, `use_cases`, `planning_mode_pct`, `time_saved_hours`
+- Example: `{"ts":"...","date":"YYYY-MM-DD","week":"W{n}","user":"Sulejman","type":"PM","text":"...","sessions_total":3,"use_cases":["automation","reporting"],"planning_mode_pct":67,"time_saved_hours":4}`
 
 ---
 

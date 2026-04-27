@@ -26,19 +26,26 @@ SEL_RSS_URL = "https://searchengineland.com/feed"
 GOOGLE_BLOG_RSS_URL = "https://blog.google/products/search/rss/"
 
 # Competitor Blog RSS Feeds
+# Only include feeds that are verified live and publish product/AI content
 COMPETITOR_FEEDS = {
     "SEMrush": "https://www.semrush.com/blog/feed/",
     "Ahrefs": "https://ahrefs.com/blog/feed/",
     "SE Ranking": "https://seranking.com/blog/feed/",
     "Sistrix": "https://www.sistrix.com/feed/",
     "Moz": "https://moz.com/blog/feed",
+    "Rank Ranger": "https://www.rankranger.com/feed",
+    # Botify, Authoritas, Nightwatch do not expose public RSS feeds
 }
 
 # Full competitor list for Reddit/HN community searches
+# Includes competitors pushing AI Search / AI Overview tracking
 COMPETITOR_NAMES = [
     "semrush", "ahrefs", "se ranking", "seranking", "accuranker",
     "sistrix", "brightedge", "conductor seo", "moz pro",
-    "advanced web ranking", "surfer seo", "surferseo"
+    "advanced web ranking", "surfer seo", "surferseo",
+    # AI Search / AIO tracking focused competitors
+    "rank ranger", "rankranger", "nightwatch", "botify",
+    "authoritas", "searchmetrics"
 ]
 
 # AI/LLM keywords for special flagging
@@ -53,7 +60,110 @@ AI_LLM_KEYWORDS = [
 
 STATE_FILE = "google_updates_state.json"
 DASHBOARD_FILE = "dashboard/dashboard_data.json"
+VOLATILITY_FILE = "dashboard/volatility_data.json"
 dashboard_alerts = []
+
+def fetch_serp_volatility():
+    """Fetch SERP volatility data from MozCast and store 30-day history."""
+    print(f"[{datetime.now().isoformat()}] Fetching SERP volatility from MozCast...")
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        resp = req.get('https://mozcast.com/', headers=headers, timeout=15)
+        resp.raise_for_status()
+        html = resp.text
+
+        # Extract the embedded Vue data JSON array
+        weather_match = re.search(r'weather:\s*(\[.*?\])\s*,\s*\n', html, re.S)
+        if not weather_match:
+            # Fallback: just grab today's temperature from the display
+            temp_match = re.search(r'display-1[^>]*>(\d+\.?\d*)°', html)
+            if temp_match:
+                today_temp = float(temp_match.group(1))
+                print(f"  📊 MozCast today: {today_temp}°")
+                # Store minimal record
+                record = {'date': datetime.now().strftime('%Y-%m-%d'), 'temp': today_temp, 'source': 'mozcast'}
+                existing = []
+                if os.path.exists(VOLATILITY_FILE):
+                    with open(VOLATILITY_FILE) as f:
+                        existing = json.load(f)
+                # Upsert today
+                existing = [e for e in existing if e.get('date') != record['date']]
+                existing.insert(0, record)
+                existing = existing[:60]  # keep 60 days
+                with open(VOLATILITY_FILE, 'w') as f:
+                    json.dump(existing, f, indent=2)
+                return today_temp
+            return None
+
+        weather_data = json.loads(weather_match.group(1))
+        print(f"  📊 MozCast: {len(weather_data)} days of data fetched")
+
+        # Normalize to clean records
+        records = []
+        for entry in weather_data:
+            try:
+                records.append({
+                    'date': entry['date'][:10],          # YYYY-MM-DD
+                    'dateStr': entry.get('dateStr', ''), # "Apr 9"
+                    'temp': float(entry.get('temp', 70)),
+                    'source': 'mozcast'
+                })
+            except (KeyError, ValueError):
+                continue
+
+        if not records:
+            print("  ⚠️ MozCast: no records parsed")
+            return None
+
+        today_temp = records[0]['temp'] if records else None
+        level = 'HIGH' if today_temp and today_temp > 90 else ('MEDIUM' if today_temp and today_temp > 75 else 'LOW')
+        print(f"  📊 MozCast today: {today_temp}° ({level})")
+
+        with open(VOLATILITY_FILE, 'w') as f:
+            json.dump(records[:60], f, indent=2)
+
+        # Send Slack alert if volatility is very high (>110°) and this is new
+        if today_temp and today_temp > 110 and SLACK_WEBHOOK_URL:
+            today_str = records[0]['date']
+            # Check if we already alerted today
+            state_path = STATE_FILE
+            try:
+                with open(state_path) as sf:
+                    state = json.load(sf)
+                alerted_dates = state.get('volatility_alerted', [])
+                if today_str not in alerted_dates:
+                    volatility_payload = {
+                        'text': f'🌡️ *High SERP Volatility Detected!* MozCast is at *{today_temp}°* today (baseline ~70°). Google rankings may be fluctuating significantly.',
+                        'attachments': [{
+                            'color': '#FF4500',
+                            'title': f'MozCast Temperature: {today_temp}°',
+                            'title_link': 'https://mozcast.com/',
+                            'fields': [
+                                {'title': 'Status', 'value': level, 'short': True},
+                                {'title': 'Baseline', 'value': '~70° = normal', 'short': True},
+                            ],
+                            'footer': 'MozCast SERP Volatility Tracker'
+                        }]
+                    }
+                    try:
+                        req.post(SLACK_WEBHOOK_URL, json=volatility_payload, timeout=10)
+                        print(f"  ✅ High volatility Slack alert sent: {today_temp}°")
+                        alerted_dates.append(today_str)
+                        state['volatility_alerted'] = alerted_dates[-30:]  # keep 30 days
+                        with open(state_path, 'w') as sf:
+                            json.dump(state, sf, indent=4)
+                    except Exception as e:
+                        print(f"  ⚠️ Volatility Slack alert failed: {e}")
+            except Exception:
+                pass
+
+        return today_temp
+
+    except Exception as e:
+        print(f"❌ Failed to fetch MozCast volatility: {e}")
+        return None
 
 def load_state():
     if os.path.exists(STATE_FILE):
@@ -873,12 +983,17 @@ def check_competitor_blogs(state):
     changes_made = False
     seen_articles = state.get("seen_competitor_blog", [])
     
-    # Keywords that signal a product update (not just content marketing)
-    product_keywords = [
-        'new feature', 'product update', 'release note', 'changelog', 'launch',
-        'announcing', 'introducing', 'now available', 'just launched',
-        'update:', 'what\'s new', 'beta release', 'new integration',
-        'new api', 'we\'ve added', 'we\'re launching'
+    # Keywords that signal a genuine NEW feature launch only.
+    # Intentionally excludes broad terms like 'product update', 'changelog',
+    # 'update:', 'what\'s new' — these catch too many non-launch posts.
+    feature_launch_keywords = [
+        'new feature', 'launch', 'just launched', 'launching',
+        'announcing', 'we are announcing', 'announcing our',
+        'introducing', 'introducing our', 'introducing the',
+        'now available', 'now live', 'beta release', 'beta launch',
+        'new integration', 'new api', "we've added", "we're launching",
+        'we just released', 'we just launched', 'early access',
+        'rolling out', 'shipped', 'just shipped'
     ]
     
     for competitor_name, feed_url in COMPETITOR_FEEDS.items():
@@ -895,22 +1010,30 @@ def check_competitor_blogs(state):
             article_id = entry.get('id', entry.get('link', ''))
             title = entry.get('title', '')
             link = entry.get('link', '')
-            summary = entry.get('summary', '')[:400]
+            
+            # Use content:encoded if available (full article in RSS), else fall back to summary.
+            # This covers 3x more signal with zero extra HTTP requests.
+            content_encoded = ''
+            if hasattr(entry, 'content') and entry.content:
+                content_encoded = entry.content[0].get('value', '')[:800]
+            if not content_encoded:
+                content_encoded = entry.get('summary', '')[:800]
             
             if article_id in seen_articles:
                 continue
             
-            combined_text = f"{title} {summary}".lower()
+            combined_text = f"{title} {content_encoded}".lower()
             
             # Determine if AI/LLM related (always pass through)
             ai_flag = is_ai_related(combined_text)
             
-            # Must be either: AI/LLM related OR a product announcement
-            is_product_update = any(kw in combined_text for kw in product_keywords)
-            if not ai_flag and not is_product_update:
+            # Must be either: AI/LLM related OR a genuine new feature launch.
+            # Broad editorial content (roundups, guides, research) is excluded.
+            is_feature_launch = any(kw in combined_text for kw in feature_launch_keywords)
+            if not ai_flag and not is_feature_launch:
                 continue
             
-            severity = "🤖 AI/LLM" if ai_flag else "Product Update"
+            severity = "🤖 AI/LLM" if ai_flag else "🚀 Feature Launch"
             
             label = f"{'🤖 ' if ai_flag else ''}{competitor_name}"
             print(f"  🏢 Found {label} update: {title[:60]}")
@@ -920,7 +1043,7 @@ def check_competitor_blogs(state):
                 status="Competitor Update",
                 severity=severity,
                 full_url=link,
-                latest_text=summary[:300] + "...",
+                latest_text=content_encoded[:300] + "...",
                 is_new=True,
                 source_name=competitor_name
             )
@@ -933,8 +1056,32 @@ def check_competitor_blogs(state):
     state["seen_competitor_blog"] = seen_articles
     return changes_made, state
 
+# Subreddits where people post about their own indie tools — not relevant for competitor monitoring
+PROMO_SUBREDDITS = {
+    'saas', 'entrepreneur', 'startups', 'indiehackers', 'sideproject',
+    'buildinpublic', 'microsaas', 'alphaandbeta', 'producthunt',
+    'forhire', 'sideprojects', 'shareprojects'
+}
+
+# Phrases that indicate someone is pitching their own tool (not discussing an established competitor)
+SELF_PROMO_PATTERNS = [
+    'i built', "i've built", 'i made', "i've made", 'we built', "we've built",
+    'i created', 'we created', 'i launched', 'we launched', 'i just launched',
+    'just launched my', 'just released my', 'introducing my', 'my new tool',
+    'my tool does', 'beta tester', 'beta testers', 'looking for beta',
+    'looking for testers', 'looking for users', 'seeking feedback',
+    'would love feedback', 'give me feedback', 'free for a month',
+    'first 100 users', 'show hn:', 'show hn -',
+    'built an', 'built a tool', 'built this', 'made a tool',
+    'side project', 'solo founder', 'indie hacker', "i'm building",
+    "we're building", 'my startup', 'my saas', 'my product',
+]
+
 def check_competitor_reddit(state):
-    """Check Reddit for competitor product updates and discussions."""
+    """Check Reddit for competitor product updates and discussions.
+    Only surfaces posts where an ESTABLISHED competitor is the main subject,
+    not indie self-promo posts that merely mention a competitor in passing.
+    """
     print(f"[{datetime.now().isoformat()}] Checking Reddit for Competitor Updates...")
     changes_made = False
     seen_posts = state.get("seen_competitor_reddit", [])
@@ -988,11 +1135,29 @@ def check_competitor_reddit(state):
         subreddit = data.get('subreddit', '')
         
         combined_text = f"{title} {selftext}".lower()
+        title_lower = title.lower()
         
-        # Identify which competitor this is about
+        # --- FILTER 1: Skip indie/startup self-promo subreddits ---
+        # These communities are for founders pitching their own tools, not competitor news.
+        if subreddit.lower() in PROMO_SUBREDDITS:
+            print(f"  ⏭️ Skipping r/{subreddit} (promo sub): {title[:55]}")
+            seen_posts.append(post_id)  # Mark seen so we never re-check it
+            continue
+        
+        # --- FILTER 2: Exclude self-promotional "I built X" posts ---
+        # These are indie founders who mention an established competitor only as a
+        # reference point (e.g. "tired of paying for Ahrefs so I built my own tool").
+        if any(p in combined_text for p in SELF_PROMO_PATTERNS):
+            print(f"  ⏭️ Skipping self-promo post: {title[:55]}")
+            seen_posts.append(post_id)  # Mark seen
+            continue
+        
+        # --- FILTER 3: Competitor must appear in the TITLE ---
+        # If the competitor is only mentioned in the body (e.g. a passing price comparison),
+        # the post is NOT genuinely about that competitor.
         matched_competitor = None
         for comp_name in COMPETITOR_NAMES:
-            if comp_name in combined_text:
+            if comp_name in title_lower:
                 matched_competitor = comp_name.title()
                 break
         
@@ -1155,6 +1320,9 @@ def main():
     changes, state = check_competitor_hn(state)
     all_changes.append(changes)
     
+    # SERP Volatility (always fetch — it's a daily snapshot, not alert-based)
+    fetch_serp_volatility()
+    
     if any(all_changes):
         save_state(state)
         print("💾 State updated across all sources.")
@@ -1189,6 +1357,8 @@ def main():
             if new_alerts:
                 print("📦 Attempting to sync dashboard data with GitHub...")
                 subprocess.run(["git", "add", DASHBOARD_FILE], check=False)
+                if os.path.exists(VOLATILITY_FILE):
+                    subprocess.run(["git", "add", VOLATILITY_FILE], check=False)
                 subprocess.run(["git", "commit", "-m", f"Dashboard datasync: {len(new_alerts)} new automated alerts"], check=False)
                 subprocess.run(["git", "push"], check=False)
         except Exception as e:

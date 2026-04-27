@@ -1,0 +1,362 @@
+[
+  {
+    "date": "2026-04-09",
+    "dateStr": "Apr 9",
+    "temp": 131.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-04-08",
+    "dateStr": "Apr 8",
+    "temp": 124.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-04-07",
+    "dateStr": "Apr 7",
+    "temp": 132.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-04-06",
+    "dateStr": "Apr 6",
+    "temp": 134.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-04-05",
+    "dateStr": "Apr 5",
+    "temp": 135.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-04-04",
+    "dateStr": "Apr 4",
+    "temp": 138.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-04-03",
+    "dateStr": "Apr 3",
+    "temp": 142.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-04-02",
+    "dateStr": "Apr 2",
+    "temp": 138.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-04-01",
+    "dateStr": "Apr 1",
+    "temp": 141.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-31",
+    "dateStr": "Mar 31",
+    "temp": 140.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-30",
+    "dateStr": "Mar 30",
+    "temp": 136.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-29",
+    "dateStr": "Mar 29",
+    "temp": 136.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-28",
+    "dateStr": "Mar 28",
+    "temp": 140.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-27",
+    "dateStr": "Mar 27",
+    "temp": 135.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-26",
+    "dateStr": "Mar 26",
+    "temp": 140.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-25",
+    "dateStr": "Mar 25",
+    "temp": 136.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-24",
+    "dateStr": "Mar 24",
+    "temp": 131.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-23",
+    "dateStr": "Mar 23",
+    "temp": 127.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-22",
+    "dateStr": "Mar 22",
+    "temp": 127.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-21",
+    "dateStr": "Mar 21",
+    "temp": 131.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-20",
+    "dateStr": "Mar 20",
+    "temp": 136.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-19",
+    "dateStr": "Mar 19",
+    "temp": 148.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-18",
+    "dateStr": "Mar 18",
+    "temp": 168.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-17",
+    "dateStr": "Mar 17",
+    "temp": 171.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-16",
+    "dateStr": "Mar 16",
+    "temp": 170.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-15",
+    "dateStr": "Mar 15",
+    "temp": 170.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-14",
+    "dateStr": "Mar 14",
+    "temp": 173.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-13",
+    "dateStr": "Mar 13",
+    "temp": 174.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-12",
+    "dateStr": "Mar 12",
+    "temp": 175.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-11",
+    "dateStr": "Mar 11",
+    "temp": 172.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-10",
+    "dateStr": "Mar 10",
+    "temp": 173.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-09",
+    "dateStr": "Mar 9",
+    "temp": 172.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-08",
+    "dateStr": "Mar 8",
+    "temp": 174.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-07",
+    "dateStr": "Mar 7",
+    "temp": 174.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-06",
+    "dateStr": "Mar 6",
+    "temp": 175.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-05",
+    "dateStr": "Mar 5",
+    "temp": 175.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-04",
+    "dateStr": "Mar 4",
+    "temp": 172.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-03",
+    "dateStr": "Mar 3",
+    "temp": 162.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-02",
+    "dateStr": "Mar 2",
+    "temp": 160.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-03-01",
+    "dateStr": "Mar 1",
+    "temp": 161.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-28",
+    "dateStr": "Feb 28",
+    "temp": 160.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-27",
+    "dateStr": "Feb 27",
+    "temp": 161.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-26",
+    "dateStr": "Feb 26",
+    "temp": 158.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-25",
+    "dateStr": "Feb 25",
+    "temp": 152.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-24",
+    "dateStr": "Feb 24",
+    "temp": 145.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-23",
+    "dateStr": "Feb 23",
+    "temp": 141.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-22",
+    "dateStr": "Feb 22",
+    "temp": 141.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-21",
+    "dateStr": "Feb 21",
+    "temp": 147.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-20",
+    "dateStr": "Feb 20",
+    "temp": 158.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-19",
+    "dateStr": "Feb 19",
+    "temp": 161.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-18",
+    "dateStr": "Feb 18",
+    "temp": 159.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-17",
+    "dateStr": "Feb 17",
+    "temp": 159.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-16",
+    "dateStr": "Feb 16",
+    "temp": 159.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-15",
+    "dateStr": "Feb 15",
+    "temp": 157.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-14",
+    "dateStr": "Feb 14",
+    "temp": 142.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-13",
+    "dateStr": "Feb 13",
+    "temp": 126.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-12",
+    "dateStr": "Feb 12",
+    "temp": 126.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-11",
+    "dateStr": "Feb 11",
+    "temp": 128.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-10",
+    "dateStr": "Feb 10",
+    "temp": 133.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-02-09",
+    "dateStr": "Feb 9",
+    "temp": 120.0,
+    "source": "mozcast"
+  }
+]

@@ -1,0 +1,71 @@
+# Secrets & credentials
+.env
+service_account.json
+secrets/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Logs
+*.log
+
+# Databases
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Browser profiles (large, local-only)
+usersnap_profile/
+usersnap_profile_fresh/
+
+# Debug screenshots & HTML dumps (local-only)
+debug_*.png
+debug_*.html
+dashboard_dom.html
+dashboard_dump.html
+dashboard_view.png
+usersnap_dom.html
+usersnap_debug.png
+usersnap_filter*.png
+verification_*.png
+seomonitor_curl_raw.html
+curl_example_output.html
+
+# Sub-projects (have their own repos)
+clickup-dashboard/
+guru-dashboard/
+slack-bot-cloud/
+
+# Backup folders
+.backup-pre-cloud-migration/
+
+# Large generated files
+guru_customer_success_knowledge_base.md
+guru_knowledge.db
+
+# Google Drive artifacts
+*.gdoc
+*.gsheet
+*.gslides
+*.gscript
+
+# Runtime state files
+*_state.json
+*_cache.json
+*_tracker.json
+synced_ids.txt
+*_report_*.json
+
+# Misc local-only
+mock_*.txt
+mock_*.zip
+tmp_invoices/
+bot_output.log
+config.json
+*.xlsx

@@ -39,7 +39,7 @@ if [ "$STARTED_SOMETHING" = true ]; then
     echo "[$(date)] Running catch-up comment check after startup..." >> "$LOG_FILE"
     curl -s -X POST "http://localhost:3000/slack/command" \
       -H "Content-Type: application/x-www-form-urlencoded" \
-      -d "command=/clickup-comments&user_id=AUTO&user_name=startup-catchup&channel_id=AUTO&response_url=none" \
+      -d "command=/clickup-comments&user_id=AUTO&user_name=startup-catchup&channel_id=AUTO&response_url=skip" \
       >> "$LOG_FILE" 2>&1
     echo "" >> "$LOG_FILE"
     echo "[$(date)] ✅ Catch-up check complete." >> "$LOG_FILE"

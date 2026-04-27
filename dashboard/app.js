@@ -9,6 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentFilter = "all";
     let currentSort = "newest";
     let searchQuery = "";
+    let lastKnownCount = 0;
+    let autoRefreshInterval = null;
+    const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
+    const STALE_THRESHOLD_H = 6; // warn if data > 6 hours old
 
     // ─── Relative Time ─────────────────────────────────────
     const relativeTime = (dateString) => {
@@ -1009,30 +1013,345 @@ document.addEventListener("DOMContentLoaded", () => {
         exportBtnsContainer.addEventListener('click', (e) => e.stopPropagation());
     }
 
-    // ─── Fetch Data ─────────────────────────────────────────
-    fetch('dashboard_data.json')
-        .then(response => {
-            if (!response.ok) throw new Error("Could not load data");
-            return response.json();
-        })
-        .then(data => {
-            allData = data;
-            updateStats(data);
-            updateFilterCounts(data);
-            buildMonthlySummary(data);
-            buildSparklines(data);
-            setLastUpdated(data);
-            applyAll();
-        })
-        .catch(error => {
-            alertsGrid.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">⚠️</div>
-                    <h3>Error Loading Data</h3>
-                    <p>Could not load dashboard_data.json. Make sure the Python script has run at least once.</p>
-                </div>
-            `;
-            console.error(error);
+    // ─── Panel Toggle Helper ──────────────────────────────────
+    const wireToggle = (toggleId, bodyId, iconId) => {
+        const toggle = document.getElementById(toggleId);
+        const body = document.getElementById(bodyId);
+        const icon = document.getElementById(iconId);
+        if (toggle && body) {
+            toggle.addEventListener('click', () => {
+                body.classList.toggle('collapsed');
+                if (icon) icon.classList.toggle('collapsed');
+            });
+        }
+    };
+    wireToggle('volatilityToggle', 'volatilityBody', 'volatilityToggleIcon');
+    wireToggle('compTimelineToggle', 'compTimelineBody', 'compTimelineToggleIcon');
+
+    // ─── SERP Volatility Panel ───────────────────────────────
+    const buildVolatilityPanel = () => {
+        fetch(`volatility_data.json?_=${Date.now()}`)
+            .then(r => r.ok ? r.json() : null)
+            .catch(() => null)
+            .then(records => {
+                if (!records || records.length === 0) {
+                    document.getElementById('volatilitySubtitle').textContent = 'No data yet — will populate on next monitor run';
+                    return;
+                }
+
+                const today = records[0];
+                const temp = today.temp;
+                const pct = Math.min((temp / 160) * 100, 100);
+
+                // Level classification
+                let level, levelColor, emoji;
+                if (temp >= 110) { level = 'Stormy'; levelColor = '#e01e5a'; emoji = '🔴'; }
+                else if (temp >= 85) { level = 'Moderate'; levelColor = '#FF8C00'; emoji = '🟡'; }
+                else { level = 'Calm'; levelColor = '#36a64f'; emoji = '🟢'; }
+
+                // Update gauge
+                document.getElementById('gaugeTempValue').textContent = Math.round(temp);
+                document.getElementById('gaugeLevelLabel').textContent = level;
+                document.getElementById('gaugeLevelLabel').style.color = levelColor;
+
+                const fill = document.getElementById('gaugeBarFill');
+                fill.style.background = levelColor;
+                setTimeout(() => { fill.style.width = pct + '%'; }, 100);
+
+                // Volatility badge in header
+                const badge = document.getElementById('volatilityBadge');
+                badge.textContent = `${emoji} ${Math.round(temp)}°`;
+                badge.style.color = levelColor;
+                badge.style.borderColor = levelColor + '55';
+                badge.style.background = levelColor + '18';
+
+                document.getElementById('volatilitySubtitle').textContent =
+                    `${level} today · ${records.length}-day history · via MozCast`;
+
+                // Sparkline — last 30 days (data is newest-first, reverse for chart)
+                const chartData = records.slice(0, 30).reverse();
+                const svg = document.getElementById('volatilitySparkSvg');
+                const xAxis = document.getElementById('volatilityXAxis');
+                svg.innerHTML = '';
+
+                const W = 420, H = 80, PAD = 4;
+                const maxVal = Math.max(...chartData.map(d => d.temp), 160);
+                const minVal = 40;
+                const range = maxVal - minVal;
+                const stepX = (W - PAD * 2) / Math.max(chartData.length - 1, 1);
+
+                const pts = chartData.map((d, i) => ({
+                    x: PAD + i * stepX,
+                    y: PAD + (1 - (d.temp - minVal) / range) * (H - PAD * 2),
+                    temp: d.temp,
+                    date: d.dateStr || d.date
+                }));
+
+                // Baseline at 70°
+                const baselineY = PAD + (1 - (70 - minVal) / range) * (H - PAD * 2);
+                const baseline = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                baseline.setAttribute('x1', PAD); baseline.setAttribute('x2', W - PAD);
+                baseline.setAttribute('y1', baselineY); baseline.setAttribute('y2', baselineY);
+                baseline.setAttribute('stroke', 'rgba(255,255,255,0.1)');
+                baseline.setAttribute('stroke-width', '1');
+                baseline.setAttribute('stroke-dasharray', '4 4');
+                svg.appendChild(baseline);
+
+                // Gradient area
+                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                defs.innerHTML = `<linearGradient id="voltGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="${levelColor}" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="${levelColor}" stop-opacity="0.02"/>
+                </linearGradient>`;
+                svg.appendChild(defs);
+
+                const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                area.setAttribute('d', `M${pts[0].x},${H} ${pts.map(p => `L${p.x},${p.y}`).join(' ')} L${pts[pts.length-1].x},${H} Z`);
+                area.setAttribute('fill', 'url(#voltGrad)');
+                svg.appendChild(area);
+
+                // Line
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                line.setAttribute('d', pts.map((p, i) => `${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '));
+                line.setAttribute('fill', 'none');
+                line.setAttribute('stroke', levelColor);
+                line.setAttribute('stroke-width', '2');
+                line.setAttribute('stroke-linecap', 'round');
+                line.setAttribute('stroke-linejoin', 'round');
+                svg.appendChild(line);
+
+                // Today's dot
+                const lastPt = pts[pts.length - 1];
+                const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                dot.setAttribute('cx', lastPt.x.toFixed(1));
+                dot.setAttribute('cy', lastPt.y.toFixed(1));
+                dot.setAttribute('r', '4');
+                dot.setAttribute('fill', levelColor);
+                dot.setAttribute('stroke', '#0A0A0F');
+                dot.setAttribute('stroke-width', '2');
+                svg.appendChild(dot);
+
+                // X-axis labels
+                xAxis.innerHTML = '';
+                const labelStep = Math.max(1, Math.floor(pts.length / 5));
+                pts.forEach((p, i) => {
+                    if (i % labelStep !== 0 && i !== pts.length - 1) return;
+                    const label = document.createElement('span');
+                    label.className = 'volatility-x-label';
+                    label.textContent = chartData[i].dateStr || chartData[i].date?.slice(5);
+                    label.style.left = ((PAD + i * stepX) / W * 100) + '%';
+                    xAxis.appendChild(label);
+                });
+            });
+    };
+
+    // ─── Competitor Activity Timeline ────────────────────────
+    const buildCompetitorTimeline = (data) => {
+        const grid = document.getElementById('compTimelineGrid');
+        if (!grid) return;
+
+        const now = new Date();
+        const cutoff = new Date(now - 30 * 86400000);
+
+        // Filter last 30 days, competitor updates only
+        const recent = data.filter(d => d.status === 'Competitor Update' && new Date(d.date) >= cutoff);
+
+        // Group by competitor name (extracted from title like "[SEMrush] ...")
+        const competitors = {};
+        recent.forEach(d => {
+            // Extract competitor from source or title bracket pattern
+            let comp = d.source || 'Unknown';
+            // Clean Reddit/HN sources to extract competitor name
+            const titleMatch = (d.title || '').match(/^\[([^\]]+)\]/);
+            if (titleMatch) comp = titleMatch[1];
+            else if (comp.startsWith('Reddit')) {
+                const srcMatch = comp.match(/r\/(\w+)/);
+                comp = srcMatch ? srcMatch[1] : comp;
+            }
+
+            if (!competitors[comp]) competitors[comp] = { total: 0, ai: 0, items: [] };
+            competitors[comp].total++;
+            if ((d.severity || '').includes('AI') || (d.severity || '').includes('🤖')) {
+                competitors[comp].ai++;
+            }
+            competitors[comp].items.push(d);
         });
+
+        // Build grid — sorted by total desc
+        const sorted = Object.entries(competitors).sort((a, b) => b[1].total - a[1].total).slice(0, 12);
+        const maxTotal = sorted[0]?.[1].total || 1;
+
+        const COMP_COLORS = {
+            'SEMrush': '#FF6B35', 'Ahrefs': '#1B4F72', 'SE Ranking': '#27AE60',
+            'Sistrix': '#8E44AD', 'Moz': '#2980B9', 'Rank Ranger': '#F39C12',
+            'Brightedge': '#E74C3C', 'Conductor': '#16A085', 'Accuranker': '#D35400',
+        };
+
+        grid.innerHTML = sorted.map(([name, stats]) => {
+            const pct = (stats.total / maxTotal) * 100;
+            const color = Object.entries(COMP_COLORS).find(([k]) => name.toLowerCase().includes(k.toLowerCase()))?.[1] || '#BB86FC';
+            const aiTag = stats.ai > 0 ? `<span class="comp-ai-tag">🤖 ${stats.ai} AI</span>` : '';
+            return `
+                <div class="comp-timeline-row" data-comp="${name}" title="Click to filter by ${name}">
+                    <div class="comp-name">
+                        <span class="comp-dot" style="background:${color}"></span>
+                        ${name}
+                        ${aiTag}
+                    </div>
+                    <div class="comp-bar-track">
+                        <div class="comp-bar-fill" data-width="${pct}" style="background:${color}"></div>
+                    </div>
+                    <span class="comp-count" style="color:${color}">${stats.total}</span>
+                </div>`;
+        }).join('');
+
+        // Animate bars
+        requestAnimationFrame(() => setTimeout(() => {
+            grid.querySelectorAll('.comp-bar-fill').forEach(bar => {
+                bar.style.width = bar.dataset.width + '%';
+            });
+        }, 100));
+
+        // Click to filter
+        grid.querySelectorAll('.comp-timeline-row').forEach(row => {
+            row.addEventListener('click', () => {
+                const comp = row.dataset.comp;
+                searchInput.value = comp;
+                searchQuery = comp;
+                searchClear.classList.remove('hidden');
+                currentFilter = 'competitor';
+                filterBtns.forEach(b => b.classList.remove('active'));
+                const matchBtn = document.querySelector('.filter-btn[data-filter="competitor"]');
+                if (matchBtn) matchBtn.classList.add('active');
+                applyAll();
+                document.getElementById('alertsGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // Update subtitle
+        const total = recent.length;
+        const aiTotal = recent.filter(d => (d.severity||'').includes('AI') || (d.severity||'').includes('🤖')).length;
+        const subtitle = document.getElementById('compTimelineSubtitle');
+        if (subtitle) subtitle.textContent = `${total} signals · ${aiTotal} AI/LLM · ${sorted.length} competitors tracked`;
+    };
+
+
+    const checkStaleness = (data) => {
+        const existing = document.getElementById('staleBanner');
+        if (data.length === 0) return;
+        const latest = data.reduce((a, b) => new Date(a.date) > new Date(b.date) ? a : b);
+        const ageHours = (Date.now() - new Date(latest.date)) / 3600000;
+        if (ageHours > STALE_THRESHOLD_H) {
+            if (!existing) {
+                const banner = document.createElement('div');
+                banner.id = 'staleBanner';
+                banner.className = 'stale-banner';
+                const ageStr = ageHours > 24
+                    ? `${Math.floor(ageHours / 24)}d ${Math.floor(ageHours % 24)}h`
+                    : `${Math.floor(ageHours)}h`;
+                banner.innerHTML = `⚠️ Data is <strong>${ageStr} old</strong> — the monitor may not have run recently. <button id="refreshNowBtn" class="refresh-now-btn">Refresh now</button>`;
+                document.querySelector('.dashboard-container').prepend(banner);
+                document.getElementById('refreshNowBtn').addEventListener('click', () => loadData(true));
+            }
+        } else {
+            if (existing) existing.remove();
+        }
+    };
+
+    // ─── New Signal Toast ────────────────────────────────────
+    const showNewSignalToast = (count) => {
+        const existing = document.querySelector('.new-signal-toast');
+        if (existing) existing.remove();
+        const toast = document.createElement('div');
+        toast.className = 'new-signal-toast';
+        toast.innerHTML = `🆕 <strong>+${count} new signal${count !== 1 ? 's' : ''}</strong> loaded`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.classList.add('toast-out'); setTimeout(() => toast.remove(), 400); }, 4000);
+    };
+
+    // ─── Refresh Button ──────────────────────────────────────
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => loadData(true));
+    }
+
+    // ─── Load Data (reusable) ────────────────────────────────
+    const loadData = (isManual = false) => {
+        const url = `dashboard_data.json?_=${Date.now()}`; // cache-bust
+        if (isManual && refreshBtn) {
+            refreshBtn.classList.add('spinning');
+            refreshBtn.disabled = true;
+        }
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error("Could not load data");
+                return response.json();
+            })
+            .then(data => {
+                const newCount = data.length - lastKnownCount;
+                const isFirstLoad = lastKnownCount === 0;
+
+                allData = data;
+                lastKnownCount = data.length;
+
+                updateStats(data);
+                updateFilterCounts(data);
+                buildMonthlySummary(data);
+                buildSparklines(data);
+                setLastUpdated(data);
+                checkStaleness(data);
+                buildCompetitorTimeline(data);
+                applyAll();
+
+                if (!isFirstLoad && newCount > 0) {
+                    showNewSignalToast(newCount);
+                }
+
+                // Update refresh button timestamp
+                const lastRefresh = document.getElementById('lastRefreshTime');
+                if (lastRefresh) {
+                    lastRefresh.textContent = `Refreshed ${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}`;
+                }
+            })
+            .catch(error => {
+                if (isFirstLoad) {
+                    alertsGrid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">⚠️</div>
+                            <h3>Error Loading Data</h3>
+                            <p>Could not load dashboard_data.json. Serve via <code>python3 -m http.server 8765</code> and open <a href="http://localhost:8765" style="color:#BB86FC">localhost:8765</a></p>
+                        </div>
+                    `;
+                }
+                console.error('Data load error:', error);
+            })
+            .finally(() => {
+                if (refreshBtn) {
+                    refreshBtn.classList.remove('spinning');
+                    refreshBtn.disabled = false;
+                }
+            });
+    };
+
+    // ─── Auto Refresh ────────────────────────────────────────
+    const startAutoRefresh = () => {
+        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+        autoRefreshInterval = setInterval(() => loadData(false), AUTO_REFRESH_MS);
+    };
+
+    // ─── Init ────────────────────────────────────────────────
+    loadData(false);
+    buildVolatilityPanel();
+    startAutoRefresh();
+
+    // Pause auto-refresh when tab hidden, resume when visible
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            clearInterval(autoRefreshInterval);
+        } else {
+            loadData(false);
+            startAutoRefresh();
+        }
+    });
 });
 

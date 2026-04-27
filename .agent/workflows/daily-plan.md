@@ -90,5 +90,30 @@ Format as:
 
 Save to `Collected Context/Daily Checkins/YYYY-MM/YYYY-MM-DD.md`
 
+### New Step: Write Shared Copy
+After writing my personal AM copy, also write a shared version:
+- Create folder `/Users/user/Library/CloudStorage/GoogleDrive-sulejman@seomonitor.com/My Drive/cosmin folder/Shared Context/AI Automation/Daily Checkins/YYYY-MM-DD/` if it doesn't exist
+- Create file `Sulejman_YYYY-MM-DD.md` in that folder with the same AM content, formatted as:
+  ```
+  # YYYY-MM-DD — Sulejman
+  ## 🌅 Morning Check-in
+  [Same AM content as the personal copy]
+  ```
+
+### New Step: Update TODAY.md
+- Read `/Users/user/Library/CloudStorage/GoogleDrive-sulejman@seomonitor.com/My Drive/cosmin folder/Shared Context/AI Automation/Daily Checkins/TODAY.md`
+- If the date is today: find my row and update it. If no row for me, add one.
+- If the date is not today or file doesn't exist: create a fresh TODAY.md with today's date.
+- Row format: `| Sulejman | ✅ HH:MM | ⏳ | AM: [2-3 sentence summary] |`
+
+### New Step: Append to Weekly Digest
+- Open `/Users/user/Library/CloudStorage/GoogleDrive-sulejman@seomonitor.com/My Drive/cosmin folder/Shared Context/AI Automation/Daily Checkins/W{n}-digest.md` (create if it doesn't exist)
+- Append: `**Sulejman — AM:** [1-2 sentence summary]`
+
+### New Step: Append to JSONL
+- Append one JSON line to `/Users/user/Library/CloudStorage/GoogleDrive-sulejman@seomonitor.com/My Drive/cosmin folder/Shared Context/AI Automation/Daily Checkins/submissions.jsonl`
+- Also append the same line to `Collected Context/submissions-backup.jsonl`
+- Format: `{"ts":"...","date":"YYYY-MM-DD","week":"W{n}","user":"Sulejman","type":"AM","text":"[full AM text]"}`
+
 Close with:
 > "Your plan is saved. Good luck today! Run `/daily-review` at end of day to close out."

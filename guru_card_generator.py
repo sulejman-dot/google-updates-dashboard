@@ -32,13 +32,19 @@ from guru_db import GuruDB
 load_dotenv()
 
 # ── Config ──────────────────────────────────────────────────────────────────
-SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN") or "xoxb-4173116321-10452138701364-22v7lSrQNCFqFe6lX8g0aCXM"
+SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
+if not SLACK_BOT_TOKEN:
+    raise RuntimeError("SLACK_BOT_TOKEN not set in environment — refusing to start")
 TECHNICAL_QUESTIONS_CHANNEL = "CDZMHAPLK"
 DAYS_LOOKBACK = 30
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "guru_cards")
+PENDING_DIR = os.path.join(SCRIPT_DIR, "guru_cards", "pending_review")  # staging area
 TRACKER_FILE = os.path.join(SCRIPT_DIR, "guru_cards_tracker.json")
+
+# Slack channel to post review notifications (bot lacks im:write for DMs)
+REVIEW_NOTIFY_CHANNEL = "C0AESD9DTC5"  # #test-channel
 
 slack_client = WebClient(token=SLACK_BOT_TOKEN)
 
@@ -58,7 +64,7 @@ BOT_NOISE_PATTERNS = [
 BOT_NOISE_RE = re.compile('|'.join(BOT_NOISE_PATTERNS), re.IGNORECASE)
 
 # Minimum length for a substantive answer
-MIN_ANSWER_LENGTH = 50
+MIN_ANSWER_LENGTH = 100
 
 # Non-answer patterns (just @mentions, short acks, link-only, etc.)
 NOT_AN_ANSWER_PATTERNS = [
@@ -70,8 +76,37 @@ NOT_AN_ANSWER_PATTERNS = [
     r'^\s*<https://app\.getguru\.com/',                     # Just a Guru link
     r'^\s*<https://app\.clickup\.com/',                     # Just a ClickUp link
     r'^(<@U[A-Z0-9]+>\s*)+\??\s*$',                        # @mentions with optional ?
+    r'^(<@U[A-Z0-9]+>\s*).*(what|was|wondering|can you)',   # Delegating question to someone
+    r'^(sorry to drag|sorry to bother)',                    # Apologetic delegation
+    r'^also,?\s*maybe\s*<@',                               # "also maybe @someone"
+    r'^hey\s*<@.*would you be able to',                    # Asking someone else for help
+    r'^hey\s*<@.*can you',                                 # Asking someone else for help
+    r'^I\'?ll provide.*answers',                            # Promise to answer later
 ]
 NOT_AN_ANSWER_RE = re.compile('|'.join(NOT_AN_ANSWER_PATTERNS), re.IGNORECASE)
+
+# ── Hedging / uncertainty patterns (disqualify the answer) ─────────────────
+HEDGING_PATTERNS = [
+    r"i don'?t have confirmation",
+    r"i'?m not sure",
+    r"not sure about",
+    r"not certain",
+    r"i don'?t know",
+    r"need to (check|confirm|verify|ask|investigate)",
+    r"i think maybe",
+    r"i believe but",
+    r"might not",
+    r"haven'?t confirmed",
+    r"can'?t confirm",
+    r"still checking",
+    r"waiting for.*confirmation",
+    r"don'?t quote me",
+    r"take this with a grain of salt",
+]
+HEDGING_RE = re.compile('|'.join(HEDGING_PATTERNS), re.IGNORECASE)
+
+# Thread-ignore patterns
+IGNORE_THREAD_RE = re.compile(r'~?ignore this thread~?|disregard this', re.IGNORECASE)
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -106,22 +141,48 @@ def is_substantive_answer(text):
     """Check if text qualifies as a real answer (not just acks/mentions/links)."""
     if not text or len(text.strip()) < MIN_ANSWER_LENGTH:
         return False
-    if NOT_AN_ANSWER_RE.match(text.strip()):
+    stripped = text.strip()
+    if NOT_AN_ANSWER_RE.match(stripped):
+        return False
+    # If it's mostly questions (3+ question marks), it's not an answer
+    if stripped.count('?') >= 3 and len(stripped) < 500:
         return False
     return True
+
+
+def has_hedging(text):
+    """Check if an answer contains hedging/uncertainty language that disqualifies it."""
+    if not text:
+        return False
+    return bool(HEDGING_RE.search(text))
+
+
+def is_thread_ignored(replies):
+    """Check if a thread has been explicitly marked to ignore."""
+    for reply in replies:
+        if IGNORE_THREAD_RE.search(reply.get('text', '')):
+            return True
+    return False
 
 
 def classify_thread(replies):
     """
     Classify a thread based on its replies:
-      'has_card'    — A real Guru card link was posted
+      'has_card'       — A real Guru card link was posted
       'no_card_needed' — The "no card needed" link was posted
-      'needs_card'  — Has a real answer but no Guru card yet
-      'no_answer'   — No substantive answer yet
+      'ignored'        — Thread explicitly marked to ignore
+      'needs_card'     — Has a definitive answer but no Guru card yet
+      'needs_followup' — Has answers but they contain hedging/uncertainty
+      'no_answer'      — No substantive answer yet
     """
+    # Check for ignored threads first
+    if is_thread_ignored(replies):
+        return 'ignored'
+
     has_guru_link = False
     is_no_card_needed = False
     has_real_answer = False
+    all_answers_hedge = True  # Track if ALL answers hedge
 
     for reply in replies[1:]:  # Skip parent message
         text = reply.get('text', '')
@@ -136,24 +197,31 @@ def classify_thread(replies):
         # Check for substantive answers (skip bot messages)
         if not is_bot_message(reply) and is_substantive_answer(text):
             has_real_answer = True
+            if not has_hedging(text):
+                all_answers_hedge = False
 
     if has_guru_link:
         return 'has_card'
     if is_no_card_needed:
         return 'no_card_needed'
+    if has_real_answer and all_answers_hedge:
+        return 'needs_followup'
     if has_real_answer:
         return 'needs_card'
     return 'no_answer'
 
 
 def extract_real_answers(replies):
-    """Extract only substantive, non-bot answers from a thread."""
+    """Extract only substantive, non-bot, non-hedging answers from a thread."""
     answers = []
     for reply in replies[1:]:
         if is_bot_message(reply):
             continue
         text = reply.get('text', '')
         if not is_substantive_answer(text):
+            continue
+        # Skip answers that contain hedging/uncertainty
+        if has_hedging(text):
             continue
 
         user_id = reply.get('user', 'Unknown')
@@ -164,19 +232,28 @@ def extract_real_answers(replies):
 
 
 def generate_title(text):
-    """Generate a clean title from question text."""
+    """
+    Generate a clean TOPIC title from question text.
+    Titles should be topic-based (e.g., 'ChatGPT tracking') not question-based.
+    """
     first_line = text.split('\n')[0].strip()
     title = re.sub(r'[*_`]', '', first_line)
     # Strip greetings
-    title = re.sub(r'^(hey\s*(team|everyone|all)?[!,.\s]*)', '', title, flags=re.IGNORECASE).strip()
-    title = re.sub(r'^(i have the following question[:\s]*)', '', title, flags=re.IGNORECASE).strip()
+    title = re.sub(r'^(hey\s*(team|everyone|guys|all|there)?[!,.\s]*)', '', title, flags=re.IGNORECASE).strip()
+    title = re.sub(r'^(hi\s*(team|everyone|guys|all|there)?[!,.\s]*)', '', title, flags=re.IGNORECASE).strip()
+    title = re.sub(r'^(i have (the following |a )?question[:\s]*)', '', title, flags=re.IGNORECASE).strip()
+    title = re.sub(r'^(quick question[:\s]*)', '', title, flags=re.IGNORECASE).strip()
+    # Convert question form to topic form
+    title = re.sub(r'^(do we|does|can we|is there|are there|what is|what are|how do we|how does)\s+', '', title, flags=re.IGNORECASE).strip()
+    # Remove trailing question marks
+    title = title.rstrip('?').strip()
     # If too short, try next lines
-    if len(title) < 20:
+    if len(title) < 15:
         lines = [l.strip() for l in text.split('\n') if l.strip()]
         for line in lines:
             clean = re.sub(r'[*_`]', '', line)
             clean = re.sub(r'^(hey\s*(team|everyone|all)?[!,.\s]*)', '', clean, flags=re.IGNORECASE).strip()
-            if len(clean) >= 20:
+            if len(clean) >= 15:
                 title = clean
                 break
     if len(title) > 120:
@@ -193,6 +270,113 @@ def slack_permalink(channel_id, thread_ts):
         return result.get("permalink", "")
     except Exception:
         return ""
+
+
+def notify_slack_review(title, filename, permalink, card_content, filepath):
+    """
+    Send a Slack notification with:
+    - Prominent thread link
+    - Interactive Approve/Reject/Follow-up buttons
+    - Uploaded .md file as a snippet for inline viewing/editing
+    """
+    try:
+        # ── 1. Post Block Kit message with interactive buttons ──
+        blocks = [
+            {
+                "type": "header",
+                "text": {"type": "plain_text", "text": "📋 New KB Card Ready for Review"}
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {"type": "mrkdwn", "text": f"*Title:*\n{title}"},
+                    {"type": "mrkdwn", "text": f"*File:*\n`{filename}`"}
+                ]
+            },
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": f"🔗 *<{permalink}|View original Slack thread>*" if permalink else "_Thread link not available_"}
+            },
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "✏️ _Open the attached file in Google Docs to review/edit, then click Approve below._"}
+            },
+            {"type": "divider"},
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "✅ Approve"},
+                        "style": "primary",
+                        "action_id": "kb_approve",
+                        "value": filename
+                    },
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "❌ Reject"},
+                        "style": "danger",
+                        "action_id": "kb_reject",
+                        "value": filename
+                    },
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "⚠️ Follow-up"},
+                        "action_id": "kb_followup",
+                        "value": filename
+                    }
+                ]
+            }
+        ]
+
+        slack_client.chat_postMessage(
+            channel=REVIEW_NOTIFY_CHANNEL,
+            text=f"📋 New KB Card for Review: {title}",  # fallback
+            blocks=blocks
+        )
+
+        # ── 2. Upload the .md file as a snippet for inline viewing/editing ──
+        try:
+            slack_client.files_upload_v2(
+                channel=REVIEW_NOTIFY_CHANNEL,
+                file=filepath,
+                filename=filename,
+                title=f"📄 {title} — Review & Edit",
+                initial_comment="⬇️ *Open with Google Docs to review/edit before approving:*",
+            )
+            print(f"   📬 Slack notification + file uploaded for review: {filename}")
+        except Exception as upload_err:
+            preview = card_content[:2500] if len(card_content) > 2500 else card_content
+            if len(card_content) > 2500:
+                preview += "\n\n_...content truncated..._"
+            slack_client.chat_postMessage(
+                channel=REVIEW_NOTIFY_CHANNEL,
+                text=f"📄 *Card content (file upload failed):*\n```\n{preview}\n```"
+            )
+            print(f"   ⚠️ File upload failed ({upload_err}), posted content inline")
+
+    except Exception as e:
+        print(f"   ⚠️ Could not send Slack notification: {e}")
+
+
+def notify_slack_followup(thread_preview, permalink):
+    """
+    Notify that a thread needs a proper answer before it can become a KB card.
+    """
+    try:
+        msg = (
+            f"⚠️ *Thread Needs Follow-Up*\n\n"
+            f"A question in #technical-questions has answers that contain "
+            f"uncertainty/hedging language and can't be turned into a KB card yet.\n\n"
+            f"*Thread:* {thread_preview[:100]}...\n"
+            f"*Link:* {permalink or '_not available_'}\n\n"
+            f"Please provide a definitive answer in the thread so it can be "
+            f"reviewed as a KB card."
+        )
+        slack_client.chat_postMessage(channel=REVIEW_NOTIFY_CHANNEL, text=msg)
+        print(f"   📬 Follow-up notification sent for thread")
+    except Exception as e:
+        print(f"   ⚠️ Could not send follow-up notification: {e}")
 
 
 def load_tracker():
@@ -277,45 +461,80 @@ def summarize_question(text):
 
 def summarize_answer(real_answers):
     """
-    Consolidate multiple thread replies into a single clean answer.
-    If there's one answer, return it clean.
-    If multiple, combine them with clear attribution.
+    Pick the best answer from the thread.
+    Strategy: prefer the longest, most definitive answer (usually the final resolution).
+    If there are multiple substantial answers, use the longest one.
+    Only add additional context from other replies if they are also substantial.
     """
     if len(real_answers) == 1:
         _, _, text = real_answers[0]
         return text.strip()
 
-    # Multiple answers — combine into one coherent response
-    parts = []
-    for i, (uid, date, text) in enumerate(real_answers):
+    # Find the longest/most substantive answer
+    sorted_answers = sorted(real_answers, key=lambda a: len(a[2]), reverse=True)
+    best = sorted_answers[0][2].strip()
+
+    # Only add additional context if it's substantially different, substantial,
+    # and itself is an answer (not more questions)
+    additional = []
+    for _, _, text in sorted_answers[1:]:
         cleaned = text.strip()
-        if i == 0:
-            parts.append(cleaned)
-        else:
-            # Add separator for additional context
-            parts.append(f"\n\n**Additional context:**\n\n{cleaned}")
-    return "\n".join(parts)
+        # Must be long, not a subset of best, and not mostly questions
+        if len(cleaned) >= 300 and cleaned[:50] not in best and cleaned.count('?') < 3:
+            additional.append(cleaned)
+
+    if additional:
+        parts = [best]
+        for add_text in additional[:2]:  # Max 2 additional context blocks
+            parts.append(f"\n\n**Additional context:**\n\n{add_text}")
+        return "\n".join(parts)
+
+    return best
+
+
+def auto_generate_tags(question_text, answer_text):
+    """Generate relevant tags from the question and answer content."""
+    combined = (question_text + ' ' + answer_text).lower()
+    # Common product/feature keywords to check
+    tag_keywords = [
+        'chatgpt', 'ais', 'ai search', 'rank tracker', 'content writer',
+        'forecast', 'traffic', 'api', 'gsc', 'google search console',
+        'keywords', 'billing', 'pricing', 'campaigns', 'visibility',
+        'search volume', 'serp', 'organic', 'carbon', 'emissions',
+        'writer-only', 'pro', 'onboarding', 'churn', 'integration',
+        'localization', 'tracking', 'scraping', 'data', 'export',
+    ]
+    tags = []
+    for kw in tag_keywords:
+        if kw in combined:
+            tags.append(kw)
+    return ', '.join(tags[:5]) if tags else 'technical'
 
 
 def format_guru_card(parent_msg, real_answers):
-    """Generate Guru card content from a Q&A thread — clean, summarized."""
+    """
+    Generate Guru card content matching the existing KB format:
+    - Topic-based title (not a question)
+    - Metadata header (Collection, Last Modified, Tags)
+    - Factual, declarative content (not Q&A format)
+    """
     raw_question = clean_slack_text(parent_msg.get('text', ''))
     question_text = summarize_question(raw_question)
     question_date = datetime.fromtimestamp(float(parent_msg['ts']))
+    today = datetime.now().strftime('%Y-%m-%d')
     title = generate_title(question_text)
     permalink = slack_permalink(TECHNICAL_QUESTIONS_CHANNEL, parent_msg['ts'])
     answer_text = summarize_answer(real_answers)
+    tags = auto_generate_tags(question_text, answer_text)
 
-    # Markdown card
+    # KB-matching format: metadata header + factual content
     card = f"""# {title}
 
-## Question
-
-{question_text}
+> **Collection:** Customer Success
+> **Last Modified:** {today}
+> **Tags:** {tags}
 
 ---
-
-## Answer
 
 {answer_text}
 
@@ -331,6 +550,7 @@ def format_guru_card(parent_msg, real_answers):
 
 def run(days_lookback=DAYS_LOOKBACK, process_all=False):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(PENDING_DIR, exist_ok=True)
     db = GuruDB()
 
     # Use DB for tracking instead of JSON file
@@ -354,7 +574,7 @@ def run(days_lookback=DAYS_LOOKBACK, process_all=False):
 
     print(f"\n🔍 Analyzing {len(new_threads)} threads...\n")
 
-    stats = {'has_card': 0, 'no_card_needed': 0, 'needs_card': 0, 'no_answer': 0}
+    stats = {'has_card': 0, 'no_card_needed': 0, 'needs_card': 0, 'no_answer': 0, 'ignored': 0, 'needs_followup': 0}
     cards_created = 0
 
     for i, thread in enumerate(new_threads, 1):
@@ -390,17 +610,32 @@ def run(days_lookback=DAYS_LOOKBACK, process_all=False):
                 has_answer=1, has_guru_card=0
             )
 
+        elif classification == 'ignored':
+            print(f"  [{i}] 🚫 Ignored thread: \"{preview}...\"")
+            db.upsert_slack_thread(
+                thread_ts=ts, channel=TECHNICAL_QUESTIONS_CHANNEL,
+                classification='ignored', question_preview=preview,
+                has_answer=0, has_guru_card=0
+            )
+
         elif classification == 'needs_card':
             real_answers = extract_real_answers(replies)
+            if not real_answers:
+                # All answers were hedging — reclassify
+                print(f"  [{i}] ⚠️  All answers hedge: \"{preview}...\"")
+                permalink = slack_permalink(TECHNICAL_QUESTIONS_CHANNEL, ts)
+                notify_slack_followup(preview, permalink)
+                continue
+
             question_text = clean_slack_text(thread.get('text', ''))
             title, card_content = format_guru_card(thread, real_answers)
             answer_text = '\n\n'.join(a[2] for a in real_answers)
             permalink = slack_permalink(TECHNICAL_QUESTIONS_CHANNEL, ts)
 
-            # Save markdown file
+            # Save to pending_review/ folder (staging area — not yet in KB)
             date_prefix = datetime.fromtimestamp(float(ts)).strftime('%Y%m%d')
             filename = f"{date_prefix}_{sanitize_filename(title)}.md"
-            filepath = os.path.join(OUTPUT_DIR, filename)
+            filepath = os.path.join(PENDING_DIR, filename)
             with open(filepath, 'w') as f:
                 f.write(card_content)
 
@@ -417,8 +652,22 @@ def run(days_lookback=DAYS_LOOKBACK, process_all=False):
                 has_answer=1, has_guru_card=0
             )
 
-            print(f"  [{i}] 📝 NEEDS CARD → Created: {filename}")
+            print(f"  [{i}] 📝 NEEDS CARD → Staged for review: {filename}")
+
+            # Notify reviewer via Slack with full card preview
+            notify_slack_review(title, filename, permalink, card_content, filepath)
             cards_created += 1
+
+        elif classification == 'needs_followup':
+            print(f"  [{i}] ⚠️  Needs follow-up (hedging detected): \"{preview}...\"")
+            permalink = slack_permalink(TECHNICAL_QUESTIONS_CHANNEL, ts)
+            notify_slack_followup(preview, permalink)
+            db.upsert_slack_thread(
+                thread_ts=ts, channel=TECHNICAL_QUESTIONS_CHANNEL,
+                classification='needs_followup', question_preview=preview,
+                has_answer=1, has_guru_card=0
+            )
+            # Don't add to processed — re-check next run
 
         elif classification == 'no_answer':
             print(f"  [{i}] ⏭️  No answer yet: \"{preview}...\"")
@@ -437,8 +686,10 @@ def run(days_lookback=DAYS_LOOKBACK, process_all=False):
     print(f"   📝 Needs Guru card (content created): {stats['needs_card']}")
     print(f"   ✅ Already has Guru card:             {stats['has_card']}")
     print(f"   🚫 No card needed:                    {stats['no_card_needed']}")
+    print(f"   🚫 Ignored threads:                   {stats['ignored']}")
+    print(f"   ⚠️  Needs follow-up:                   {stats['needs_followup']}")
     print(f"   ⏭️  No answer yet:                     {stats['no_answer']}")
-    print(f"\n   📂 Markdown: {OUTPUT_DIR}")
+    print(f"\n   📂 Pending: {PENDING_DIR}")
     print(f"   🗄️  Database: {db_stats['guru_cards']} guru cards, {db_stats['pending_cards']} pending")
 
 

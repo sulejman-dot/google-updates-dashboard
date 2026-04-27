@@ -17,7 +17,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configuration
-SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN") or "xoxb-4173116321-10452138701364-22v7lSrQNCFqFe6lX8g0aCXM"
+SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
+if not SLACK_BOT_TOKEN:
+    raise RuntimeError("SLACK_BOT_TOKEN not set in environment — refusing to start")
 SLACK_ALERT_CHANNEL = os.getenv("SLACK_ALERT_CHANNEL", "@sulejman")
 STATE_FILE = "comment_state.json"
 
