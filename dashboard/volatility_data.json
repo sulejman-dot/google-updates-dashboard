@@ -1,5 +1,29 @@
 [
   {
+    "date": "2026-05-11",
+    "dateStr": "May 11",
+    "temp": 114.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-05-10",
+    "dateStr": "May 10",
+    "temp": 115.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-05-09",
+    "dateStr": "May 9",
+    "temp": 122.0,
+    "source": "mozcast"
+  },
+  {
+    "date": "2026-05-08",
+    "dateStr": "May 8",
+    "temp": 122.0,
+    "source": "mozcast"
+  },
+  {
     "date": "2026-05-07",
     "dateStr": "May 7",
     "temp": 108.0,
@@ -333,30 +357,6 @@
     "date": "2026-03-13",
     "dateStr": "Mar 13",
     "temp": 174.0,
-    "source": "mozcast"
-  },
-  {
-    "date": "2026-03-12",
-    "dateStr": "Mar 12",
-    "temp": 175.0,
-    "source": "mozcast"
-  },
-  {
-    "date": "2026-03-11",
-    "dateStr": "Mar 11",
-    "temp": 172.0,
-    "source": "mozcast"
-  },
-  {
-    "date": "2026-03-10",
-    "dateStr": "Mar 10",
-    "temp": 173.0,
-    "source": "mozcast"
-  },
-  {
-    "date": "2026-03-09",
-    "dateStr": "Mar 9",
-    "temp": 172.0,
     "source": "mozcast"
   }
 ]
