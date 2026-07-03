@@ -1,5 +1,16 @@
 [
     {
+        "id": "7e31785b-58ab-4638-b100-79b9714d3cd7",
+        "date": "2026-07-03T16:53:16.306508",
+        "title": "June 2026 spam update",
+        "status": "SERVICE_INFORMATION",
+        "severity": "LOW",
+        "url": "https://status.search.google.com/incidents/YUX1peHev5a4fkxLDiUQ",
+        "text": "The rollout was complete as of June 26, 2026.",
+        "source": "Google Status Dashboard",
+        "is_new": true
+    },
+    {
         "id": "717be570-846b-48e1-b842-2170ea9e6957",
         "date": "2026-07-03T16:39:26.254623",
         "title": "Search News Buzz Video Recap: Google June Spam Update Done, Fraud DMCA Takedowns Breaks Google, Costly Google Ad Budget Changes & More",
